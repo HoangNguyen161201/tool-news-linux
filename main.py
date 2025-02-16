@@ -18,3 +18,8 @@ from pathlib import Path
 import subprocess
 from datetime import datetime
 import pyglet
+
+print(get_all_links())
+# delete_link('https://www.theguardian.com/world/2025/feb/15/uk-based-lawyers-for-hong-kong-activist-jimmy-lai-targeted-by-chinese-state')
+# # # # insert_link('https://www.theguardian.com/world/article/2024/may/21/gove-accuses-uk-university-protests-of-antisemitism-repurposed-for-instagram-age')
+# time.sleep(60)

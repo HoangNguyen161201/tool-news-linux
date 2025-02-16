@@ -9,4 +9,6 @@
 2 clone github: git clone https://github.com/HoangNguyen161201/tool-news-linux.git
 
 3 install libraries:
-- selenium 4.27.1
+- pip install selenium==4.27.1
+- pip install python-slugify==8.0.4
+- pip install pyglet==2.1.1
