@@ -5,4 +5,16 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-print("Hello, world!")
+
+import time
+import random
+import os
+# from untils import generate_content, generate_voice_kokoro, generate_image, generate_video_by_image, concact_content_videos, count_folders, generate_thumbnail, upload_yt
+import concurrent.futures
+from data import gif_paths, person_img_paths
+from slugify import slugify
+from db import connect_db, check_link_exists, insert_link,delete_link, get_all_links
+from pathlib import Path
+import subprocess
+from datetime import datetime
+import pyglet
