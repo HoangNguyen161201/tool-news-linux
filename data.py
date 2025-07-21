@@ -12,3 +12,16 @@ edge_voice_data = [
     "en-US-RogerNeural",
     "en-US-SteffanNeural",
 ]
+
+
+gemini_keys = [
+    'AIzaSyA5Dhdav1JfroDhO5G6OVdzFATvYTXwNuM',
+    'AIzaSyB2j_rHJOnMA9Zi7fziRd-ccB2NANTTctA',
+    'AIzaSyA5AZYheK24asDX0smMWHmzTcOuFgIAcRw',
+    'AIzaSyDO1kguNUtt--NUE2gbEyZDWhga2BuGXeI',
+    'AIzaSyD2zA0PJvQAUWyWGk-UunQP5XeMbhlYBA8',
+    'AIzaSyAO3zWuhyUKzPsweyiEDKcuiZxLKkdUNNk',
+    'AIzaSyA9T58LWbmaHJFuCPCbJiXxPx_Y2DoiIVk'
+]
+
+

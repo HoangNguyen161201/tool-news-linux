@@ -1,26 +1,55 @@
-from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-
-import time
-import random
+import shutil
 import os
-# from untils import generate_content, generate_voice_kokoro, generate_image, generate_video_by_image, concact_content_videos, count_folders, generate_thumbnail, upload_yt
-import concurrent.futures
-from data import gif_paths, person_img_paths
-from slugify import slugify
-from db import connect_db, check_link_exists, insert_link,delete_link, get_all_links
-from pathlib import Path
-import subprocess
-from datetime import datetime
-import pyglet
+from untils import get_all_link_in_theguardian_new, get_info_new
+from untils import get_img_gif_person, get_info_new
+from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
 
-connect_db()
-print(get_all_links())
-# delete_link('https://www.theguardian.com/world/2025/feb/15/uk-based-lawyers-for-hong-kong-activist-jimmy-lai-targeted-by-chinese-state')
-# # # # insert_link('https://www.theguardian.com/world/article/2024/may/21/gove-accuses-uk-university-protests-of-antisemitism-repurposed-for-instagram-age')
-# time.sleep(60)
+def main():
+    current_link = None
+    try:
+        # tạo folder để chứa video
+        path_folder = f'./videos'
+        try:
+            shutil.rmtree(path_folder)
+        except:
+            print('next')
+        
+        os.makedirs(path_folder)
+        # lấy tất cả link tin tức
+        link_news = get_all_link_in_theguardian_new()
+        
+        # kết nối db và kiểm tra có link tồn tại chưa, chưa thì lấy và làm video
+        connect_db()
+        for link in link_news:
+            if not check_link_exists(f'https://www.theguardian.com/{link}'):
+                current_link = link
+                break
+
+        # nếu không có link thì bắn lỗi
+        if (current_link is None):
+            raise Exception("Lỗi xảy ra, không tồn tại link hoặc đã hết tin tức")
+
+        current_link = f'https://www.theguardian.com/{current_link}'
+        print(current_link)
+
+        # lấy thông tin của video
+        new_info = get_info_new(current_link)
+        print(new_info)
+
+        # lấy ngẫu nhiên đường dẫn hình ảnh và hình động người thuyết trình
+        person_info = get_img_gif_person()
+        
+        # tạo ra image gốc và image mờ, sau đó tạo ra video từng phần
+        path_videos = []
+        print(current_link)
+        if(new_info is None):
+            raise Exception("Lỗi xảy ra, không có thông tin của content")
+        for key, item in enumerate(new_info['picture_links']):
+            print(item)   
+               
+    except Exception as e:
+        print(current_link)
+        print(f'loi xay ra: {e}')  
+
+if __name__ == "__main__":
+    main()
