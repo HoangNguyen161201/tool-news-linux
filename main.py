@@ -1,8 +1,9 @@
 import shutil
 import os
-from untils import get_all_link_in_theguardian_new, get_info_new
+from untils import generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
 from untils import get_img_gif_person, get_info_new, generate_image
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
+import random
 
 def main():
     current_link = None
@@ -48,7 +49,15 @@ def main():
             img_path = f"{path_folder}/image-{key}.jpg"
             img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
             generate_image(item, img_path, img_blur_path)
-
+            random_number = random.randint(5, 10)
+            generate_video_by_image(
+                1 if key % 2 == 0 else None,
+                img_path,
+                img_blur_path,
+                f'{path_folder}/video-{key}.mp4',
+                random_number,
+                person_info['person_gif_path']
+            )
     except Exception as e:
         print(current_link)
         print(f'loi xay ra: {e}')  

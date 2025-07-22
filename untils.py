@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import random
 from data import gif_paths, person_img_paths
 import cv2
+import subprocess
+from tqdm import tqdm
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -103,3 +105,62 @@ def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     # Ghi kết quả
     cv2.imwrite(out_path, image_with_border)
     cv2.imwrite(out_blur_path, blurred)
+
+
+def generate_video_by_image(zoom_in, in_path, blur_in_path, out_path, second, gif_path):
+    width, height = 1920, 1080
+    duration = second
+
+    os.makedirs('./temp', exist_ok=True)
+
+    cmd = [
+        'ffmpeg',
+        '-y',
+        '-loop', '1', '-t', str(duration), '-i', blur_in_path,           # [0] blur background
+        '-loop', '1', '-t', str(duration), '-i', in_path,                # [1] foreground
+        '-stream_loop', '-1', '-i', gif_path,                            # [2] gif looped
+        '-loop', '1', '-t', str(duration), '-i', './public/avatar.png',  # [3] avatar
+        '-filter_complex',
+        f"""
+        [0:v]setsar=1,setpts=PTS-STARTPTS[bg];
+        [1:v]setsar=1,setpts=PTS-STARTPTS[fg];
+        [2:v]scale={int(width*0.8)}:{int(height*0.8)},trim=duration={duration},setpts=PTS-STARTPTS[gif];
+        [3:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7,setsar=1[avatar];
+        [bg][fg]overlay=(W-w)/2:(H-h)/2[tmp1];
+        [tmp1][gif]overlay=0:250[tmp2];
+        [tmp2][avatar]overlay=1650:50
+        """.replace('\n', ''),
+        '-t', str(duration),
+        '-r', '24',
+        '-c:v', 'libx264',
+        '-pix_fmt', 'yuv420p',
+        out_path
+    ]
+
+    # === Run FFmpeg with progress ===
+    process = subprocess.Popen(
+        cmd,
+        stderr=subprocess.PIPE,
+        universal_newlines=True
+    )
+
+    total_frames = duration * 24
+    pbar = tqdm(total=total_frames, desc="Rendering", unit="frame")
+
+    for line in process.stderr:
+        if "frame=" in line:
+            parts = line.strip().split()
+            for part in parts:
+                if part.startswith("frame="):
+                    try:
+                        frame_number = int(part.split('=')[1])
+                        pbar.n = frame_number
+                        pbar.refresh()
+                    except:
+                        pass
+    pbar.close()
+
+    process.wait()
+    if process.returncode != 0:
+        raise Exception("FFmpeg failed")
+
