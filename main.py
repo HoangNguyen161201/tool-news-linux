@@ -1,7 +1,7 @@
 import shutil
 import os
 from untils import get_all_link_in_theguardian_new, get_info_new
-from untils import get_img_gif_person, get_info_new
+from untils import get_img_gif_person, get_info_new, generate_image
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
 
 def main():
@@ -45,8 +45,10 @@ def main():
         if(new_info is None):
             raise Exception("Lỗi xảy ra, không có thông tin của content")
         for key, item in enumerate(new_info['picture_links']):
-            print(item)   
-               
+            img_path = f"{path_folder}/image-{key}.jpg"
+            img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
+            generate_image(item, img_path, img_blur_path)
+
     except Exception as e:
         print(current_link)
         print(f'loi xay ra: {e}')  
