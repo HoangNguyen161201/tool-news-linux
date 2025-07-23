@@ -51,9 +51,7 @@ def main():
             generate_image(item, img_path, img_blur_path)
             random_number = random.randint(5, 10)
             generate_video_by_image(
-                1 if key % 2 == 0 else None,
                 img_path,
-                img_blur_path,
                 f'{path_folder}/video-{key}.mp4',
                 random_number,
                 person_info['person_gif_path']

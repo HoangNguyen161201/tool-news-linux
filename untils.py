@@ -102,40 +102,50 @@ def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     image_resized = resize_to_fit(image, 1840, 1000)
     image_with_border = cv2.copyMakeBorder(image_resized, 25, 25, 25, 25, cv2.BORDER_CONSTANT, value=(255, 255, 255))
 
-    # Ghi kết quả
-    cv2.imwrite(out_path, image_with_border)
+    # === GHÉP ẢNH CHÍNH LÊN ẢNH BLUR ===
+    # Tính vị trí để canh giữa
+    h_blur, w_blur = blurred.shape[:2]
+    h_img, w_img = image_with_border.shape[:2]
+
+    x_offset = (w_blur - w_img) // 2
+    y_offset = (h_blur - h_img) // 2
+
+    # Dán ảnh chính lên ảnh blur
+    combined = blurred.copy()
+    combined[y_offset:y_offset + h_img, x_offset:x_offset + w_img] = image_with_border
+
+    # Ghi ảnh kết quả
+    cv2.imwrite(out_path, combined)
     cv2.imwrite(out_blur_path, blurred)
 
 
-def generate_video_by_image(zoom_in, in_path, blur_in_path, out_path, second, gif_path):
+def generate_video_by_image( in_path, out_path, second, gif_path):
     width, height = 1920, 1080
     duration = second
-
     os.makedirs('./temp', exist_ok=True)
 
     cmd = [
-        'ffmpeg',
-        '-y',
-        '-loop', '1', '-t', str(duration), '-i', blur_in_path,           # [0] blur background
-        '-loop', '1', '-t', str(duration), '-i', in_path,                # [1] foreground
-        '-stream_loop', '-1', '-i', gif_path,                            # [2] gif looped
-        '-loop', '1', '-t', str(duration), '-i', './public/avatar.png',  # [3] avatar
-        '-filter_complex',
+        "ffmpeg",
+        "-y",
+        "-loop", "0", "-t", str(duration), "-i", in_path,
+        "-loop", "0", "-t", str(duration), "-i", './public/avatar.png',
+        "-filter_complex",
         f"""
-        [0:v]setsar=1,setpts=PTS-STARTPTS[bg];
-        [1:v]setsar=1,setpts=PTS-STARTPTS[fg];
-        [2:v]scale={int(width*0.8)}:{int(height*0.8)},trim=duration={duration},setpts=PTS-STARTPTS[gif];
-        [3:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7,setsar=1[avatar];
-        [bg][fg]overlay=(W-w)/2:(H-h)/2[tmp1];
-        [tmp1][gif]overlay=0:250[tmp2];
-        [tmp2][avatar]overlay=1650:50
+        [0:v]scale={width}:{height},setsar=1,setpts=PTS-STARTPTS[bg]; \
+        [1:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7,setsar=1[avatar]; \
+        [bg][avatar]overlay={width - 270}:50
         """.replace('\n', ''),
-        '-t', str(duration),
-        '-r', '24',
-        '-c:v', 'libx264',
-        '-pix_fmt', 'yuv420p',
+        "-t", str(duration),
+        "-r", "15",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-tune", "zerolatency",
+        "-threads", "1",
+        "-pix_fmt", "yuv420p",
+        "-movflags", "+faststart",
         out_path
     ]
+
 
     # === Run FFmpeg with progress ===
     process = subprocess.Popen(
