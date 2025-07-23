@@ -6,6 +6,13 @@ from data import gif_paths, person_img_paths
 import cv2
 import subprocess
 from tqdm import tqdm
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+import shutil
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+import re
+from moviepy import AudioFileClip, concatenate_audioclips
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -119,7 +126,7 @@ def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     cv2.imwrite(out_blur_path, blurred)
 
 
-def generate_video_by_image( in_path, out_path, second, gif_path):
+def generate_video_by_image( in_path, out_path, second):
     width, height = 1920, 1080
     duration = second
     os.makedirs('./temp', exist_ok=True)
@@ -174,3 +181,133 @@ def generate_video_by_image( in_path, out_path, second, gif_path):
     if process.returncode != 0:
         raise Exception("FFmpeg failed")
 
+def download_and_resize_image(url, size=(399, 399), save_path='output.jpg'):
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # báo lỗi nếu không tải được
+        image = Image.open(BytesIO(response.content)).convert('RGB')
+        
+        # Resize theo kích thước cố định (có thể méo hình nếu không đúng tỷ lệ)
+        image_resized = image.resize(size)
+
+        image_resized.save(save_path)
+        print(f"✅ Saved resized image to {save_path}")
+    except Exception as e:
+        print(f"❌ Error processing {url}: {e}")
+
+def add_rounded_corners(image: Image.Image, radius: int) -> Image.Image:
+    # Tạo mặt nạ hình tròn
+    rounded_mask = Image.new("L", image.size, 0)
+    draw = ImageDraw.Draw(rounded_mask)
+    draw.rounded_rectangle([0, 0, *image.size], radius=radius, fill=255)
+
+    # Áp dụng mask vào ảnh
+    rounded_image = image.copy()
+    rounded_image.putalpha(rounded_mask)
+
+    return rounded_image
+
+def import_audio_to_video(in_path, out_path, audio_duration, audio_path):
+    command = [
+        "ffmpeg", "-y",
+        "-i", in_path,               # Đường dẫn video đầu vào
+        "-i", audio_path,            # Đường dẫn âm thanh đầu vào
+        "-t", str(audio_duration),   # Đặt thời gian cho video theo độ dài âm thanh
+        "-filter:v", "scale=1920:1080,fps=30",  # Bộ lọc video
+        "-c:v", "libx264",           # Sử dụng codec video h.264
+        "-c:a", "aac",               # Sử dụng codec âm thanh AAC
+        "-b:a", "192k",              # Cài đặt bitrate âm thanh
+        "-preset", "fast",           # Cài đặt preset nhanh
+        "-map", "0:v:0",             # Chỉ định video từ stream đầu tiên (video)
+        "-map", "1:a:0",             # Chỉ định audio từ stream thứ hai (audio)
+        out_path                     # Đường dẫn đầu ra
+    ]
+    subprocess.run(command)
+
+def generate_image_and_video_aff_and_get_three_item():
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    # Create a new client and connect to the server
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db = client["news"]
+    collection = db["link_affs"]
+
+    path_folder = f'./pic_affs'
+    try:
+        shutil.rmtree(path_folder)
+    except:
+        print('next')
+    
+    os.makedirs(path_folder)
+
+    # Lấy ngẫu nhiên 3 item
+    random_items = list(collection.aggregate([
+        {"$sample": {"size": 3}}
+    ]))
+
+
+    # In kết quả
+    for i, item in enumerate(random_items):
+        download_and_resize_image(item['itemMainPic'], save_path= f'{path_folder}/pic_{i}.png')
+
+
+    try:
+        background = Image.open('./public/bg/aff.png').convert("RGB")
+        draw = ImageDraw.Draw(background)
+
+        
+        font = ImageFont.truetype("./fonts/arial/arial.ttf", 35)
+        font2 = ImageFont.truetype("./fonts/arial/arial.ttf", 29)
+        font3 = ImageFont.truetype("./fonts/arial/ARIBL0.ttf", 40)
+    
+
+        for i, item in enumerate(random_items):
+            foreground = Image.open(f'{path_folder}/pic_{i}.png').convert("RGBA")
+            foreground = add_rounded_corners(foreground, 11)
+            x = 367 + 498 * i
+            y = 240
+            background.paste(foreground, (x, y), foreground)
+            
+            title = item['itemTitle']
+            if len(title) > 30:
+                title = title[:20] + "..."
+
+            
+            percent = ''
+            match = re.search(r'\d+(\.\d+)?', item['itemOriginPriceMin'])
+            match2 = re.search(r'\d+(\.\d+)?', item['itemPriceDiscountMin'])
+            if match and match2:
+                number1 = float(match.group())
+                number2 = float(match2.group())
+                percent = f'-{round(number2 / number1 * 100, 0)}%'
+
+
+            # Vẽ chữ phía dưới ảnh
+            draw.text((x, y + foreground.height + 25), title, fill=(0, 0, 0), font=font)
+            draw.text((x, y + foreground.height + 80), f'{item['totalTranpro3Semantic']} Sold', fill=(128, 128, 128), font=font2)
+            draw.rounded_rectangle(
+                [(x + 230, y), (x + 230 + 170, y + 65)],
+                radius=15,  # độ cong của góc
+                fill=(255, 255, 255),
+                outline=(210, 210, 210)
+            )
+            draw.text((x + 240, y), percent, fill=(255, 0, 0), font=font3)
+            
+        background.save(f'{path_folder}/pic_result.png')
+        audio = AudioFileClip('./public/aff.aac')
+
+        generate_video_by_image(
+                        f'{path_folder}/pic_result.png',
+                        f'{path_folder}/daft.mp4',
+                        audio.duration
+                    )
+
+        import_audio_to_video(f'{path_folder}/daft.mp4', f'{path_folder}/aff.mp4', audio.duration,  './public/aff.aac')
+        print(audio.duration)
+        
+        audio.close()
+        print("✅ Done")
+
+        return random_items
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return None

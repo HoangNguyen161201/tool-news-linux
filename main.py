@@ -1,7 +1,8 @@
 import shutil
 import os
 from untils import generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
-from untils import get_img_gif_person, get_info_new, generate_image
+from untils import get_info_new, generate_image
+from untils import generate_image_and_video_aff_and_get_three_item
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
 import random
 
@@ -36,9 +37,6 @@ def main():
         # lấy thông tin của video
         new_info = get_info_new(current_link)
         print(new_info)
-
-        # lấy ngẫu nhiên đường dẫn hình ảnh và hình động người thuyết trình
-        person_info = get_img_gif_person()
         
         # tạo ra image gốc và image mờ, sau đó tạo ra video từng phần
         path_videos = []
@@ -53,9 +51,12 @@ def main():
             generate_video_by_image(
                 img_path,
                 f'{path_folder}/video-{key}.mp4',
-                random_number,
-                person_info['person_gif_path']
+                random_number
             )
+        products = generate_image_and_video_aff_and_get_three_item()
+        if(products is None):
+            raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
+    
     except Exception as e:
         print(current_link)
         print(f'loi xay ra: {e}')  
