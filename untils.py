@@ -225,9 +225,9 @@ def import_audio_to_video(in_path, out_path, audio_duration, audio_path):
     subprocess.run(command)
 
 def generate_image_and_video_aff_and_get_three_item():
-    uri = "mongodb://hoangdev161201:Cuem161201@ac-eenupvm-shard-00-00.3o8ba2h.mongodb.net:27017,ac-eenupvm-shard-00-01.3o8ba2h.mongodb.net:27017,ac-eenupvm-shard-00-02.3o8ba2h.mongodb.net:27017/?ssl=true&replicaSet=atlas-13orb0-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0"
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     # Create a new client and connect to the server
-    client = MongoClient(uri)
+    client = MongoClient(uri, server_api=ServerApi('1'))
     db = client["news"]
     collection = db["link_affs"]
 
