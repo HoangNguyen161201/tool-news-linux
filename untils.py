@@ -3,7 +3,7 @@ import os
 from bs4 import BeautifulSoup
 import random
 from data import gif_paths, person_img_paths, gemini_keys
-
+import asyncio
 import cv2
 import subprocess
 from tqdm import tqdm
@@ -15,6 +15,8 @@ from io import BytesIO
 import re
 from moviepy import AudioFileClip, concatenate_audioclips
 import google.generativeai as genai
+import edge_tts
+import uuid
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -460,3 +462,67 @@ def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
     png_image = png_image.convert("RGBA")
     jpg_image.paste(png_image, (0, 0), png_image)
     jpg_image.save(out_path)
+
+def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-AriaNeural", rate="+5%", pitch="-5Hz", chunk_size=500):
+    def split_text_by_dot(text, max_length):
+        sentences = text.split(".")
+        chunks = []
+        current = ""
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+            if len(current) + len(sentence) + 1 <= max_length:
+                current += sentence + ". "
+            else:
+                chunks.append(current.strip())
+                current = sentence + ". "
+        if current:
+            chunks.append(current.strip())
+        return chunks
+
+    async def _run():
+        temp_dir = "__temp_voice_edge__"
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_files = []
+
+        chunks = split_text_by_dot(content, chunk_size)
+
+        for i, chunk in enumerate(tqdm(chunks, desc="TTS Chunks")):
+            file_path = os.path.join(temp_dir, f"chunk_{i}_{uuid.uuid4().hex}.mp3")
+            tts = edge_tts.Communicate(text=chunk, voice=voice, rate=rate, pitch=pitch)
+            await tts.save(file_path)
+            temp_files.append(file_path)
+
+        # Tạo concat list
+        concat_path = os.path.join(temp_dir, "concat.txt")
+        with open(concat_path, "w", encoding="utf-8") as f:
+            for file in temp_files:
+                f.write(f"file '{os.path.abspath(file).replace('\\', '/')}'\n")
+
+        print("🔊 Merging audio files...")
+        process = subprocess.Popen(
+            [
+                "ffmpeg", "-f", "concat", "-safe", "0",
+                "-i", concat_path,
+                "-c", "copy", "-y", output_path
+            ],
+            stderr=subprocess.PIPE,
+            universal_newlines=True
+        )
+
+        for line in tqdm(process.stderr, desc="Merging", unit="line"):
+            pass
+
+        process.wait()
+
+        # Cleanup
+        for file in temp_files + [concat_path]:
+            try: os.remove(file)
+            except: pass
+        try: os.rmdir(temp_dir)
+        except: pass
+
+        print(f"✅ Done! Saved to {output_path}")
+
+    asyncio.run(_run())

@@ -2,7 +2,7 @@ import shutil
 import os
 from untils import generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
 from untils import get_img_gif_person, get_info_new, generate_image, generate_content_improved
-from untils import generate_thumbnail, generate_image_and_video_aff_and_get_three_item
+from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
 import random
 from concurrent.futures import ProcessPoolExecutor, wait
@@ -86,6 +86,11 @@ def main():
             f"{path_folder}/thumbnail.jpg",
             new_info['title'].replace('*', '')
         )
+
+        # tạo âm thanh video
+        print('generate voice-----------------')
+        generate_to_voice_edge(new_info['content'], f"{path_folder}/content-voice.mp3")
+
         
     except Exception as e:
         print(current_link)
