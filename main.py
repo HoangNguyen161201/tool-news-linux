@@ -1,8 +1,8 @@
 import shutil
 import os
 from untils import generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
-from untils import get_info_new, generate_image, generate_content_improved
-from untils import generate_image_and_video_aff_and_get_three_item
+from untils import get_img_gif_person, get_info_new, generate_image, generate_content_improved
+from untils import generate_thumbnail, generate_image_and_video_aff_and_get_three_item
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
 import random
 from concurrent.futures import ProcessPoolExecutor, wait
@@ -38,7 +38,9 @@ def main():
 
         # lấy thông tin của video
         new_info = get_info_new(current_link)
-        print(new_info)
+
+        # lấy ngẫu nhiên đường dẫn hình ảnh và hình động người thuyết trình
+        person_info = get_img_gif_person()
         
         # tạo ra image gốc và image mờ, sau đó tạo ra video từng phần
         path_videos = []
@@ -76,6 +78,14 @@ def main():
             new_info['title_slug'] = slugify(new_info['title'])
 
         print(new_info)
+        # tạo thumbnail video
+        generate_thumbnail(
+            f"{path_folder}/image-0.jpg",
+            person_info['person_img_path'],
+            f"{path_folder}/draf-thumbnail.jpg",
+            f"{path_folder}/thumbnail.jpg",
+            new_info['title'].replace('*', '')
+        )
         
     except Exception as e:
         print(current_link)
