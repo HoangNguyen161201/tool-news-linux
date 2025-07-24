@@ -17,6 +17,7 @@ from moviepy import AudioFileClip, concatenate_audioclips
 import google.generativeai as genai
 import edge_tts
 import uuid
+from moviepy import VideoFileClip
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -138,15 +139,14 @@ def generate_video_by_image( in_path, out_path, second):
     cmd = [
         "ffmpeg",
         "-y",
-        "-loop", "0", "-t", str(duration), "-i", in_path,
-        "-loop", "0", "-t", str(duration), "-i", './public/avatar.png',
+        "-framerate", "15", "-loop", "1", "-t", str(duration), "-i", in_path,
+        "-framerate", "15", "-loop", "1", "-t", str(duration), "-i", './public/avatar.png',
         "-filter_complex",
         f"""
         [0:v]scale={width}:{height},setsar=1,setpts=PTS-STARTPTS[bg]; \
         [1:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7,setsar=1[avatar]; \
         [bg][avatar]overlay={width - 270}:50
         """.replace('\n', ''),
-        "-t", str(duration),
         "-r", "15",
         "-c:v", "libx264",
         "-preset", "ultrafast",
@@ -156,7 +156,6 @@ def generate_video_by_image( in_path, out_path, second):
         "-movflags", "+faststart",
         out_path
     ]
-
 
     # === Run FFmpeg with progress ===
     process = subprocess.Popen(
@@ -527,95 +526,100 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
 
     asyncio.run(_run())
 
-# def concat_content_videos(intro_path, short_link_path, audio_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2):
-#     # Load âm thanh
-#     audio = AudioFileClip(audio_path)
-#     audio_duration = audio.duration
-
-#     duration_video = 0
-#     index = 0
-#     video_path_list_concat = []
-
-#     normalize_audio(audio_path, audio_out_path)
-
-#     while duration_video < audio_duration:
-#         video = VideoFileClip(video_path_list[index])
-#         video_path_list_concat.append(video_path_list[index])
-#         duration_video += video.duration
-#         if(index + 1 == video_path_list.__len__()):
-#             index = 0
-#         else:
-#             index += 1
-#         video.close()
-
-#     # Tạo file danh sách tạm thời
-#     list_file = "video_list.txt"
-#     with open(list_file, "w", encoding="utf-8") as f:
-#         for path in video_path_list_concat:
-#             f.write(f"file '{os.path.abspath(path)}'\n")
-
-#     # nối các video lại với nhau
-#     command = [
-#         "ffmpeg",
-#         "-f", "concat",
-#         "-safe", "0",
-#         "-i", list_file,
-#         "-c", "copy",
-#         draf_out_path,
-#         "-progress", "-",
-#         "-nostats"
-#     ]
-
-#     # Chạy và hiển thị tiến trình
-#     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-#     for line in process.stdout:
-#         line = line.strip()
-#         if line.startswith("frame=") or "out_time=" in line or "progress=" in line:
-#             print(line)
-
-#     process.wait()
-
-#     # cắt đúng duration và gắn âm thanh
-#     import_audio_to_video(draf_out_path, draf_out_path_2, audio_duration, audio_out_path)
+def concat_content_videos(intro_path, short_link_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2):
+    print(1)
+    # Load âm thanh
+    audio = AudioFileClip(audio_out_path)
+    print(2)
+    audio_duration = audio.duration
+    print(3)
+    print(audio_duration)
+    duration_video = 0
+    index = 0
+    video_path_list_concat = []
+    print(4)
 
 
-#     # nối intro với video
-#     with open(list_file, "w", encoding="utf-8") as f:
-#         f.write(f"file '{os.path.abspath(intro_path)}'\n")
-#         if short_link_path is not None:
-#             f.write(f"file '{os.path.abspath(short_link_path)}'\n")
-#         f.write(f"file '{os.path.abspath(draf_out_path_2)}'\n")
+    while duration_video < audio_duration:
+        video = VideoFileClip(video_path_list[index])
+        video_path_list_concat.append(video_path_list[index])
+        print(video.duration)
+        duration_video += video.duration
+        if(index + 1 == video_path_list.__len__()):
+            index = 0
+        else:
+            index += 1
+        video.close()
+    print(5)
 
-#     command = [
-#         "ffmpeg",
-#         "-f", "concat",
-#         "-safe", "0",
-#         "-i", list_file,
-#         "-c:v", "libx264",       # Re-encode video
-#         "-c:a", "aac",           # Re-encode audio
-#         "-b:a", "192k",          # Bitrate audio
-#         "-preset", "fast",
-#         out_path
-#     ]
+    # Tạo file danh sách tạm thời
+    list_file = "video_list.txt"
+    with open(list_file, "w", encoding="utf-8") as f:
+        for path in video_path_list_concat:
+            f.write(f"file '{os.path.abspath(path)}'\n")
 
-#     subprocess.run(command)
-#     os.remove(list_file)
-#     audio.close()
+    # nối các video lại với nhau
+    command = [
+        "ffmpeg",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", list_file,
+        "-c", "copy",
+        draf_out_path,
+        "-progress", "-",
+        "-nostats"
+    ]
 
-# def normalize_video(input_path, output_path):
-#     """Chuẩn hóa 1 video để tránh lỗi concat."""
-#     command = [
-#         "ffmpeg", "-y",
-#         "-i", input_path,
-#         "-c:a", "aac",            # Chuyển âm thanh về codec aac
-#         "-b:a", "192k",           # Bitrate âm thanh
-#         "-ar", "44100",           # Tần số mẫu 44100Hz
-#         "-ac", "2", 
-#         "-vf", "fps=30,format=yuv420p",
-#         "-af", "aresample=async=1",
-#         "-preset", "fast",
-#         "-crf", "23",
-#         output_path
-#     ]
+    # Chạy và hiển thị tiến trình
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    for line in process.stdout:
+        line = line.strip()
+        if line.startswith("frame=") or "out_time=" in line or "progress=" in line:
+            print(line)
 
-#     subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    process.wait()
+
+    # cắt đúng duration và gắn âm thanh
+    import_audio_to_video(draf_out_path, draf_out_path_2, audio_duration, audio_out_path)
+
+
+    # nối intro với video
+    with open(list_file, "w", encoding="utf-8") as f:
+        f.write(f"file '{os.path.abspath(intro_path)}'\n")
+        if short_link_path is not None:
+            f.write(f"file '{os.path.abspath(short_link_path)}'\n")
+        f.write(f"file '{os.path.abspath(draf_out_path_2)}'\n")
+
+    command = [
+        "ffmpeg",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", list_file,
+        "-c:v", "libx264",       # Re-encode video
+        "-c:a", "aac",           # Re-encode audio
+        "-b:a", "192k",          # Bitrate audio
+        "-preset", "fast",
+        out_path
+    ]
+
+    subprocess.run(command)
+    os.remove(list_file)
+    audio.close()
+
+def normalize_video(input_path, output_path):
+    """Chuẩn hóa 1 video để tránh lỗi concat."""
+    command = [
+        "ffmpeg", "-y",
+        "-i", input_path,
+        "-c:a", "aac",            # Chuyển âm thanh về codec aac
+        "-b:a", "192k",           # Bitrate âm thanh
+        "-ar", "44100",           # Tần số mẫu 44100Hz
+        "-ac", "2", 
+        "-vf", "fps=30,format=yuv420p",
+        "-af", "aresample=async=1",
+        "-preset", "fast",
+        "-crf", "23",
+        output_path
+    ]
+
+    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
