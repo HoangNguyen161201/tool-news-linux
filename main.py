@@ -100,7 +100,7 @@ def main():
             path_videos,
             f'{path_folder}/{new_info['title_slug']}.mkv',
             f'{path_folder}/draf.mkv',
-            f'{path_folder}/draf2.mp4',
+            f'{path_folder}/draf2.mkv',
         )
         
     except Exception as e:

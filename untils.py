@@ -580,8 +580,8 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
 
     process.wait()
 
-    # # cắt đúng duration và gắn âm thanh
-    # import_audio_to_video(draf_out_path, draf_out_path_2, audio_duration, audio_out_path)
+    # cắt đúng duration và gắn âm thanh
+    import_audio_to_video(draf_out_path, draf_out_path_2, audio_duration, audio_out_path)
 
 
     # # nối intro với video
