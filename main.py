@@ -52,7 +52,6 @@ def main():
             img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
             generate_image(item, img_path, img_blur_path)
             random_number = random.randint(5, 10)
-            print(random_number)
             generate_video_by_image(
                 img_path,
                 f'{path_folder}/video-{key}.mp4',
@@ -60,49 +59,49 @@ def main():
             )
             path_videos.append(f"{path_folder}/video-{key}.mp4")
             
-        # products = generate_image_and_video_aff_and_get_three_item()
-        # if(products is None):
-        #     raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
+        products = generate_image_and_video_aff_and_get_three_item()
+        if(products is None):
+            raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
 
-        # # chuyển đổi title và description lại, tạo mới lại content
-        # with ProcessPoolExecutor() as executor:
-        #     future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'])
-        #     future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'])
+        # chuyển đổi title và description lại, tạo mới lại content
+        with ProcessPoolExecutor() as executor:
+            future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'])
+            future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'])
 
-        #     wait([future1, future2])
+            wait([future1, future2])
 
-        #     result1 = future1.result()
-        #     result2 = future2.result()
+            result1 = future1.result()
+            result2 = future2.result()
 
-        #     # Gán lại kết quả vào new_info
-        #     new_info['title'] = result1['title']
-        #     new_info['description'] = result1['description']
-        #     new_info['content'] = result2
-        #     new_info['title_slug'] = slugify(new_info['title'])
+            # Gán lại kết quả vào new_info
+            new_info['title'] = result1['title']
+            new_info['description'] = result1['description']
+            new_info['content'] = result2
+            new_info['title_slug'] = slugify(new_info['title'])
 
-        # print(new_info)
-        # # tạo thumbnail video
-        # generate_thumbnail(
-        #     f"{path_folder}/image-0.jpg",
-        #     person_info['person_img_path'],
-        #     f"{path_folder}/draf-thumbnail.jpg",
-        #     f"{path_folder}/thumbnail.jpg",
-        #     new_info['title'].replace('*', '')
-        # )
+        print(new_info)
+        # tạo thumbnail video
+        generate_thumbnail(
+            f"{path_folder}/image-0.jpg",
+            person_info['person_img_path'],
+            f"{path_folder}/draf-thumbnail.jpg",
+            f"{path_folder}/thumbnail.jpg",
+            new_info['title'].replace('*', '')
+        )
 
-        # # tạo âm thanh video
-        # print('generate voice-----------------')
-        # generate_to_voice_edge(new_info['content'], f"{path_folder}/content-voice.aac")
+        # tạo âm thanh video
+        print('generate voice-----------------')
+        generate_to_voice_edge(new_info['content'], f"{path_folder}/content-voice.aac")
 
-        # concat_content_videos(
-        #     './public/intro_ffmpeg.mp4',
-        #     f'./pic_affs/aff.mp4',
-        #     f"{path_folder}/content-voice.aac",
-        #     path_videos,
-        #     f'{path_folder}/{new_info['title_slug']}.mp4',
-        #     f'{path_folder}/draf.mp4',
-        #     f'{path_folder}/draf2.mp4',
-        # )
+        concat_content_videos(
+            './public/intro_ffmpeg.mp4',
+            f'./pic_affs/aff.mp4',
+            f"{path_folder}/content-voice.aac",
+            path_videos,
+            f'{path_folder}/{new_info['title_slug']}.mp4',
+            f'{path_folder}/draf.mp4',
+            f'{path_folder}/draf2.mp4',
+        )
         
     except Exception as e:
         print(current_link)

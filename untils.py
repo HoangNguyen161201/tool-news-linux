@@ -584,28 +584,28 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
     import_audio_to_video(draf_out_path, draf_out_path_2, audio_duration, audio_out_path)
 
 
-    # nối intro với video
-    with open(list_file, "w", encoding="utf-8") as f:
-        f.write(f"file '{os.path.abspath(intro_path)}'\n")
-        if short_link_path is not None:
-            f.write(f"file '{os.path.abspath(short_link_path)}'\n")
-        f.write(f"file '{os.path.abspath(draf_out_path_2)}'\n")
+    # # nối intro với video
+    # with open(list_file, "w", encoding="utf-8") as f:
+    #     f.write(f"file '{os.path.abspath(intro_path)}'\n")
+    #     if short_link_path is not None:
+    #         f.write(f"file '{os.path.abspath(short_link_path)}'\n")
+    #     f.write(f"file '{os.path.abspath(draf_out_path_2)}'\n")
 
-    command = [
-        "ffmpeg",
-        "-f", "concat",
-        "-safe", "0",
-        "-i", list_file,
-        "-c:v", "libx264",       # Re-encode video
-        "-c:a", "aac",           # Re-encode audio
-        "-b:a", "192k",          # Bitrate audio
-        "-preset", "fast",
-        out_path
-    ]
+    # command = [
+    #     "ffmpeg",
+    #     "-f", "concat",
+    #     "-safe", "0",
+    #     "-i", list_file,
+    #     "-c:v", "libx264",       # Re-encode video
+    #     "-c:a", "aac",           # Re-encode audio
+    #     "-b:a", "192k",          # Bitrate audio
+    #     "-preset", "fast",
+    #     out_path
+    # ]
 
-    subprocess.run(command)
-    os.remove(list_file)
-    audio.close()
+    # subprocess.run(command)
+    # os.remove(list_file)
+    # audio.close()
 
 def normalize_video(input_path, output_path):
     """Chuẩn hóa 1 video để tránh lỗi concat."""
