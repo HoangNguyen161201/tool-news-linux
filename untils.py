@@ -139,24 +139,25 @@ def generate_video_by_image( in_path, out_path, second):
     cmd = [
         "ffmpeg",
         "-y",
-        "-framerate", "15", "-loop", "1", "-t", str(duration), "-i", in_path,
-        "-framerate", "15", "-loop", "1", "-t", str(duration), "-i", './public/avatar.png',
+        "-framerate", "1", "-loop", "1", "-t", str(duration), "-i", in_path,
+        "-framerate", "1", "-loop", "1", "-t", str(duration), "-i", './public/avatar.png',
         "-filter_complex",
         f"""
         [0:v]scale={width}:{height},setsar=1,setpts=PTS-STARTPTS[bg]; \
         [1:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7,setsar=1[avatar]; \
         [bg][avatar]overlay={width - 270}:50
         """.replace('\n', ''),
-        "-r", "15",
-        "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-tune", "zerolatency",
-        "-threads", "1",
-        "-pix_fmt", "yuv420p",
-        "-movflags", "+faststart",
+        "-r", "1",                   # Giảm FPS cho nhẹ
+        "-crf", "32",                 # Giảm bitrate nhưng giữ duration
+        "-c:v", "libx264",            # Codec phổ biến
+        "-preset", "ultrafast",       # Encode nhanh
+        "-tune", "zerolatency",       # Cho realtime/stream
+        "-threads", "1",              # 1 vCPU
+        "-pix_fmt", "yuv420p",        # Tương thích
+        "-movflags", "+faststart",   # Tốt cho web
+        "-t", str(duration),          # ✨ Đảm bảo thời lượng cuối cùng
         out_path
     ]
-
     # === Run FFmpeg with progress ===
     process = subprocess.Popen(
         cmd,
