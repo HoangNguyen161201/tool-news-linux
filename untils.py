@@ -2,7 +2,8 @@ import requests
 import os
 from bs4 import BeautifulSoup
 import random
-from data import gif_paths, person_img_paths
+from data import gif_paths, person_img_paths, gemini_keys
+
 import cv2
 import subprocess
 from tqdm import tqdm
@@ -13,6 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import re
 from moviepy import AudioFileClip, concatenate_audioclips
+import google.generativeai as genai
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -311,3 +313,73 @@ def generate_image_and_video_aff_and_get_three_item():
     except Exception as e:
         print(f"❌ Error: {e}")
         return None
+
+
+def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0]):
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model)
+    response = model.generate_content(content)
+    return response.text
+
+def generate_title_description_improved(title, description):
+    while True:
+        title_des = generate_content(f'''tôi đang có các thông tin như sau:
+                                    - title: {title}
+                                    - description: {description}
+                                    hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
+                                    Trả ra dưới định dạng như sau:
+                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
+                                    Từ dòng thứ 2 trở đi: là description. 
+                                    Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
+                                    api_key= gemini_keys[2]
+                        )
+        
+        lines = title_des.splitlines()
+        title_line = lines[0].strip()
+        if len(title_line) < 100:
+            desc = "\n".join(lines[1:]).strip()
+            desc = re.sub(r'[ \t]+', ' ', desc)
+            return {
+                "title": title_line,
+                "description": desc
+            }
+
+# tạo lại nội dung content
+def generate_title_description_improved(title, description):
+    while True:
+        title_des = generate_content(f'''tôi đang có các thông tin như sau:
+                                    - title: {title}
+                                    - description: {description}
+                                    hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
+                                    Trả ra dưới định dạng như sau:
+                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
+                                    Từ dòng thứ 2 trở đi: là description. 
+                                    Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
+                                    api_key= gemini_keys[2]
+                        )
+        
+        lines = title_des.splitlines()
+        title_line = lines[0].strip()
+        if len(title_line) < 100:
+            desc = "\n".join(lines[1:]).strip()
+            desc = re.sub(r'[ \t]+', ' ', desc)
+            return {
+                "title": title_line,
+                "description": desc
+            }
+
+# tạo lại nội dung content
+def generate_content_improved(content, title):
+    return generate_content(f'''
+        Tôi có một bản tin mới. Hãy viết lại bằng tiếng Anh sao cho hấp dẫn, súc tích và phù hợp để đọc lên trong một video tin tức trên YouTube (voice-over). Nội dung cần được viết dưới dạng khách quan ở ngôi thứ ba, không dùng "I", "my", "we", hay bất kỳ đại từ ngôi thứ nhất nào.
+        title là: {title},
+        Nội dung là: {content}
+
+        Yêu cầu:
+        - độ dài ký tự bằng hoặc trên {content.__len__()} ký tự.
+        - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
+        - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
+        - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
+        ''', api_key= gemini_keys[2])
+        
+        

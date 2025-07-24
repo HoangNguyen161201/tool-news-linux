@@ -1,10 +1,12 @@
 import shutil
 import os
-from untils import generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
-from untils import get_info_new, generate_image
+from untils import generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
+from untils import get_info_new, generate_image, generate_content_improved
 from untils import generate_image_and_video_aff_and_get_three_item
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
 import random
+from concurrent.futures import ProcessPoolExecutor, wait
+from slugify import slugify
 
 def main():
     current_link = None
@@ -56,7 +58,25 @@ def main():
         products = generate_image_and_video_aff_and_get_three_item()
         if(products is None):
             raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
-    
+
+        # chuyển đổi title và description lại, tạo mới lại content
+        with ProcessPoolExecutor() as executor:
+            future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'])
+            future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'])
+
+            wait([future1, future2])
+
+            result1 = future1.result()
+            result2 = future2.result()
+
+            # Gán lại kết quả vào new_info
+            new_info['title'] = result1['title']
+            new_info['description'] = result1['description']
+            new_info['content'] = result2
+            new_info['title_slug'] = slugify(new_info['title'])
+
+        print(new_info)
+        
     except Exception as e:
         print(current_link)
         print(f'loi xay ra: {e}')  
