@@ -89,8 +89,18 @@ def main():
 
         # tạo âm thanh video
         print('generate voice-----------------')
-        generate_to_voice_edge(new_info['content'], f"{path_folder}/content-voice.mp3")
+        generate_to_voice_edge(new_info['content'], f"{path_folder}/content-voice.aac")
 
+        # concat_content_videos(
+        #     './public/intro_ffmpeg.mp4',
+        #     f'{path_folder}/nsfw.mp4',
+        #     f"{path_folder}/content-voice.mp3",
+        #     f"{path_folder}/content-voice.aac",
+        #     path_videos,
+        #     f'{path_folder}/{new_info['title_slug']}.mp4',
+        #     f'{path_folder}/draf.mp4',
+        #     f'{path_folder}/draf2.mp4',
+        # )
         
     except Exception as e:
         print(current_link)
