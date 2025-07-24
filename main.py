@@ -54,10 +54,10 @@ def main():
             random_number = random.randint(5, 10)
             generate_video_by_image(
                 img_path,
-                f'{path_folder}/video-{key}.mp4',
+                f'{path_folder}/video-{key}.mkv',
                 random_number
             )
-            path_videos.append(f"{path_folder}/video-{key}.mp4")
+            path_videos.append(f"{path_folder}/video-{key}.mkv")
             
         products = generate_image_and_video_aff_and_get_three_item()
         if(products is None):
@@ -98,8 +98,8 @@ def main():
             f'./pic_affs/aff.mp4',
             f"{path_folder}/content-voice.aac",
             path_videos,
-            f'{path_folder}/{new_info['title_slug']}.mp4',
-            f'{path_folder}/draf.mp4',
+            f'{path_folder}/{new_info['title_slug']}.mkv',
+            f'{path_folder}/draf.mkv',
             f'{path_folder}/draf2.mp4',
         )
         
