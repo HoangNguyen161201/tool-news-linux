@@ -214,17 +214,14 @@ def add_rounded_corners(image: Image.Image, radius: int) -> Image.Image:
 def import_audio_to_video(in_path, out_path, audio_duration, audio_path):
     command = [
         "ffmpeg", "-y",
-        "-i", in_path,               # Đường dẫn video đầu vào
-        "-i", audio_path,            # Đường dẫn âm thanh đầu vào
-        "-t", str(audio_duration),   # Đặt thời gian cho video theo độ dài âm thanh
-        "-filter:v", "scale=1920:1080,fps=30",  # Bộ lọc video
-        "-c:v", "libx264",           # Sử dụng codec video h.264
-        "-c:a", "aac",               # Sử dụng codec âm thanh AAC
-        "-b:a", "192k",              # Cài đặt bitrate âm thanh
-        "-preset", "fast",           # Cài đặt preset nhanh
-        "-map", "0:v:0",             # Chỉ định video từ stream đầu tiên (video)
-        "-map", "1:a:0",             # Chỉ định audio từ stream thứ hai (audio)
-        out_path                     # Đường dẫn đầu ra
+        "-i", in_path,
+        "-i", audio_path,
+        "-map", "0:v:0",
+        "-map", "1:a:0",
+        "-c:v", "copy",
+        "-c:a", "copy",
+        "-shortest",
+        out_path
     ]
     subprocess.run(command)
 
@@ -357,7 +354,7 @@ def generate_title_description_improved(title, description):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[1]
+                                    api_key= gemini_keys[0]
                         )
         
         lines = title_des.splitlines()
@@ -382,7 +379,7 @@ def generate_content_improved(content, title):
         - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
         - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
         - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
-        ''', api_key= gemini_keys[1])
+        ''', api_key= gemini_keys[0])
         
         
 def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
