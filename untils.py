@@ -16,6 +16,7 @@ import re
 import google.generativeai as genai
 import edge_tts
 import uuid
+import paramiko
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -624,3 +625,59 @@ def get_media_duration(audio_path):
         duration = int(hours) * 3600 + int(minutes) * 60 + float(seconds)
         return duration
     return 0
+
+def write_lines_to_file(filepath, contents):
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    with open(filepath, "w", encoding="utf-8") as f:
+        for line in contents:
+            f.write(line.rstrip() + "\n")  # đảm bảo mỗi dòng kết thúc bằng \n
+
+def download_file_from_vps(host, username, password, remote_path, local_path, port = 22):
+    transport = paramiko.Transport((host, port))
+    transport.connect(username=username, password=password)
+
+    sftp = paramiko.SFTPClient.from_transport(transport)
+    sftp.get(remote_path, local_path)
+
+    sftp.close()
+    transport.close()
+    print(f"✅ Tải file thành công: {remote_path} → {local_path}")
+
+def delete_remote_folder_vps(host, username, password, folder_path, port=22):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname=host, username=username, password=password, port=port)
+
+        # Lệnh xóa thư mục
+        command = f"rm -rf '{folder_path}'"
+        stdin, stdout, stderr = ssh.exec_command(command)
+
+        error = stderr.read().decode()
+        if error:
+            print(f"❌ Lỗi khi xóa thư mục: {error}")
+        else:
+            print(f"🗑️ Đã xóa thư mục thành công: {folder_path}")
+
+        ssh.close()
+    except Exception as e:
+        print(f"❌ Lỗi khi kết nối SSH hoặc xóa thư mục: {e}")
+
+def check_file_exists_on_vps(host, username, password, remote_path, port=22):
+    try:
+        transport = paramiko.Transport((host, port))
+        transport.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+
+        sftp.stat(remote_path)  # Gây lỗi nếu file không tồn tại
+
+        sftp.close()
+        transport.close()
+        print(f"✅ File tồn tại: {remote_path}")
+        return True
+    except FileNotFoundError:
+        print(f"❌ File không tồn tại: {remote_path}")
+        return False
+    except Exception as e:
+        print(f"⚠️ Lỗi kiểm tra file: {e}")
+        return False

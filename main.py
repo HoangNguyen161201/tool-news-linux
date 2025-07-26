@@ -1,6 +1,6 @@
 import shutil
 import os
-from untils import generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
+from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
 from untils import concat_content_videos, get_img_gif_person, get_info_new, generate_image, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item
 from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
@@ -108,6 +108,15 @@ def main():
             f'{path_folder}/draf3.mkv',
         )
 
+        write_lines_to_file(
+            f'{path_folder}/result.txt',
+            [
+                new_info['title'],
+                f'news, {', '.join(new_info['tags'].split(','))}, breaking news, current events',
+                f"{new_info['description']}\n\n(tags):\n{', '.join(new_info['tags'].split(','))}"
+            ]
+        )
+
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Thời gian chạy: {elapsed_time:.2f} giây")
@@ -118,3 +127,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
