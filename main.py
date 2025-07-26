@@ -104,6 +104,7 @@ def main():
             f'{path_folder}/result.mkv',
             f'{path_folder}/draf.mkv',
             f'{path_folder}/draf2.mkv',
+            f'{path_folder}/draf3.mkv'
         )
 
         end_time = time.time()

@@ -315,28 +315,7 @@ def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0])
     response = model.generate_content(content)
     return response.text
 
-def generate_title_description_improved(title, description):
-    while True:
-        title_des = generate_content(f'''tôi đang có các thông tin như sau:
-                                    - title: {title}
-                                    - description: {description}
-                                    hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
-                                    Trả ra dưới định dạng như sau:
-                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
-                                    Từ dòng thứ 2 trở đi: là description. 
-                                    Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[2]
-                        )
-        
-        lines = title_des.splitlines()
-        title_line = lines[0].strip()
-        if len(title_line) < 100:
-            desc = "\n".join(lines[1:]).strip()
-            desc = re.sub(r'[ \t]+', ' ', desc)
-            return {
-                "title": title_line,
-                "description": desc
-            }
+
 
 # tạo lại nội dung content
 def generate_title_description_improved(title, description):
@@ -349,7 +328,7 @@ def generate_title_description_improved(title, description):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[0]
+                                    api_key= gemini_keys[1]
                         )
         
         lines = title_des.splitlines()
@@ -374,7 +353,7 @@ def generate_content_improved(content, title):
         - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
         - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
         - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
-        ''', api_key= gemini_keys[0])
+        ''', api_key= gemini_keys[1])
         
         
 def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
@@ -519,7 +498,7 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
 
     asyncio.run(_run())
 
-def concat_content_videos(intro_path, short_link_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2):
+def concat_content_videos(intro_path, short_link_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
     # Load âm thanh
     audio_duration = get_media_duration(audio_out_path)
     duration_video = 0
@@ -539,6 +518,7 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
 
     # Tạo file danh sách tạm thời
     list_file = "video_list.txt"
+    
     with open(list_file, "w", encoding="utf-8") as f:
         for path in video_path_list_concat:
             f.write(f"file '{os.path.abspath(path)}'\n")
@@ -566,14 +546,15 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
 
     # cắt đúng duration và gắn âm thanh
     import_audio_to_video(draf_out_path, draf_out_path_2, audio_out_path, audio_duration)
+    normalize_video(draf_out_path_2, draf_out_path_3)
 
 
     # nối intro với video
     with open(list_file, "w", encoding="utf-8") as f:
-        # f.write(f"file '{os.path.abspath(intro_path)}'\n")
+        f.write(f"file '{os.path.abspath(intro_path)}'\n")
         if short_link_path is not None:
             f.write(f"file '{os.path.abspath(short_link_path)}'\n")
-        f.write(f"file '{os.path.abspath(draf_out_path_2)}'\n")
+        f.write(f"file '{os.path.abspath(draf_out_path_3)}'\n")
 
     command = [
         "ffmpeg",
@@ -586,52 +567,26 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
         "-nostats"
     ]
 
-
     subprocess.run(command)
     os.remove(list_file)
 
+
 def normalize_video(input_path, output_path):
-    """Chuẩn hóa 1 video để tránh lỗi concat."""
     command = [
         "ffmpeg", "-y",
+        "-threads", "1",                   # Giới hạn 1 CPU
         "-i", input_path,
-        "-c:a", "aac",            # Chuyển âm thanh về codec aac
-        "-b:a", "192k",           # Bitrate âm thanh
-        "-ar", "44100",           # Tần số mẫu 44100Hz
-        "-ac", "2", 
-        "-vf", "fps=30,format=yuv420p",
-        "-af", "aresample=async=1",
-        "-preset", "fast",
-        "-crf", "23",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",           # Encode nhanh, ít RAM
+        "-crf", "28",                     # Chất lượng ok + nhẹ hơn
+        "-c:a", "aac",
+        "-b:a", "128k",                   # Bitrate âm thanh thấp hơn
+        "-ar", "44100",                   # Sample rate
+        "-ac", "2",                       # Stereo
+        "-movflags", "+faststart",       # Tối ưu phát online
         output_path
     ]
-
-    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-
-def extract_aac_from_mp4(mp4_file, output_aac_file):
-    command = [
-        "ffmpeg",
-        "-i", mp4_file,        # input .mp4 file
-        "-vn",                 # bỏ video
-        "-c:a", "aac",         # codec âm thanh: aac
-        "-b:a", "192k",        # bitrate: 192 kbps
-        output_aac_file,
-        "-y"                   # ghi đè nếu đã tồn tại
-    ]
     subprocess.run(command)
-
-def convert_mp4_to_mkv(input_path, output_path):
-    command = [
-            "ffmpeg",
-            "-y",                    # Ghi đè nếu file đã tồn tại
-            "-i", input_path,        # File đầu vào
-            "-c:v", "copy",          # Giữ nguyên video codec
-            "-c:a", "aac",           # Đảm bảo âm thanh là AAC
-            "-b:a", "192k",          # Bitrate âm thanh ổn định
-            "-movflags", "+faststart",  # Tốt cho streaming
-            output_path              # File đầu ra (đuôi .mkv)
-        ]
-    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
 def get_media_duration(audio_path):
     result = subprocess.run(
@@ -646,4 +601,3 @@ def get_media_duration(audio_path):
         duration = int(hours) * 3600 + int(minutes) * 60 + float(seconds)
         return duration
     return 0
-
