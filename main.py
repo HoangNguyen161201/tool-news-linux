@@ -95,7 +95,7 @@ def main():
 
         concat_content_videos(
             './public/intro_ffmpeg.mp4',
-            f'./pic_affs/aff.mp4',
+            f'./pic_affs/aff.mkv',
             f"{path_folder}/content-voice.aac",
             path_videos,
             f'{path_folder}/{new_info['title_slug']}.mkv',
