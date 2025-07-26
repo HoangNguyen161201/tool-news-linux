@@ -13,11 +13,9 @@ import shutil
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import re
-from moviepy import AudioFileClip, concatenate_audioclips
 import google.generativeai as genai
 import edge_tts
 import uuid
-from moviepy import VideoFileClip
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -211,7 +209,7 @@ def add_rounded_corners(image: Image.Image, radius: int) -> Image.Image:
 
     return rounded_image
 
-def import_audio_to_video(in_path, out_path, audio_duration, audio_path):
+def import_audio_to_video(in_path, out_path, audio_path, audio_duration):
     command = [
         "ffmpeg", "-y",
         "-i", in_path,
@@ -220,7 +218,7 @@ def import_audio_to_video(in_path, out_path, audio_duration, audio_path):
         "-map", "1:a:0",
         "-c:v", "copy",
         "-c:a", "copy",
-        "-shortest",
+        "-t", str(audio_duration),
         out_path
     ]
     subprocess.run(command)
@@ -294,20 +292,17 @@ def generate_image_and_video_aff_and_get_three_item():
             draw.text((x + 240, y), percent, fill=(255, 0, 0), font=font3)
             
         background.save(f'{path_folder}/pic_result.png')
-        audio = AudioFileClip('./public/aff.aac')
+        audio_duration = get_media_duration('./public/aff.aac')
 
         generate_video_by_image(
                         f'{path_folder}/pic_result.png',
                         f'{path_folder}/daft.mkv',
-                        audio.duration
+                        audio_duration
                     )
 
-        import_audio_to_video(f'{path_folder}/daft.mkv', f'{path_folder}/aff.mkv', audio.duration,  './public/aff.aac')
-        print(audio.duration)
+        import_audio_to_video(f'{path_folder}/daft.mkv', f'{path_folder}/aff.mkv',  './public/aff.aac', audio_duration)
         
-        audio.close()
         print("✅ Done")
-
         return random_items
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -525,27 +520,22 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
     asyncio.run(_run())
 
 def concat_content_videos(intro_path, short_link_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2):
-    print(1)
     # Load âm thanh
-    audio = AudioFileClip(audio_out_path)
-    audio_duration = audio.duration
+    audio_duration = get_media_duration(audio_out_path)
     duration_video = 0
     index = 0
     video_path_list_concat = []
-    print(4)
 
 
     while duration_video < audio_duration:
-        video = VideoFileClip(video_path_list[index])
         video_path_list_concat.append(video_path_list[index])
-        print(video.duration)
-        duration_video += video.duration
+        video_duration = get_media_duration(video_path_list[index])
+        print(video_duration)
+        duration_video += video_duration
         if(index + 1 == video_path_list.__len__()):
             index = 0
         else:
             index += 1
-        video.close()
-    print(5)
 
     # Tạo file danh sách tạm thời
     list_file = "video_list.txt"
@@ -575,7 +565,7 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
     process.wait()
 
     # cắt đúng duration và gắn âm thanh
-    import_audio_to_video(draf_out_path, draf_out_path_2, audio_duration, audio_out_path)
+    import_audio_to_video(draf_out_path, draf_out_path_2, audio_out_path, audio_duration)
 
 
     # nối intro với video
@@ -599,7 +589,6 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
 
     subprocess.run(command)
     os.remove(list_file)
-    audio.close()
 
 def normalize_video(input_path, output_path):
     """Chuẩn hóa 1 video để tránh lỗi concat."""
@@ -618,3 +607,43 @@ def normalize_video(input_path, output_path):
     ]
 
     subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+
+def extract_aac_from_mp4(mp4_file, output_aac_file):
+    command = [
+        "ffmpeg",
+        "-i", mp4_file,        # input .mp4 file
+        "-vn",                 # bỏ video
+        "-c:a", "aac",         # codec âm thanh: aac
+        "-b:a", "192k",        # bitrate: 192 kbps
+        output_aac_file,
+        "-y"                   # ghi đè nếu đã tồn tại
+    ]
+    subprocess.run(command)
+
+def convert_mp4_to_mkv(input_path, output_path):
+    command = [
+            "ffmpeg",
+            "-y",                    # Ghi đè nếu file đã tồn tại
+            "-i", input_path,        # File đầu vào
+            "-c:v", "copy",          # Giữ nguyên video codec
+            "-c:a", "aac",           # Đảm bảo âm thanh là AAC
+            "-b:a", "192k",          # Bitrate âm thanh ổn định
+            "-movflags", "+faststart",  # Tốt cho streaming
+            output_path              # File đầu ra (đuôi .mkv)
+        ]
+    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+
+def get_media_duration(audio_path):
+    result = subprocess.run(
+        ["ffmpeg", "-i", audio_path],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        text=True
+    )
+    match = re.search(r'Duration: (\d+):(\d+):([\d.]+)', result.stderr)
+    if match:
+        hours, minutes, seconds = match.groups()
+        duration = int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+        return duration
+    return 0
+

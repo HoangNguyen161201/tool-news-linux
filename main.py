@@ -7,8 +7,11 @@ from db import check_link_exists, connect_db, insert_link, get_all_links, delete
 import random
 from concurrent.futures import ProcessPoolExecutor, wait
 from slugify import slugify
+import time
 
 def main():
+
+    start_time = time.time()
     current_link = None
     try:
         # tạo folder để chứa video
@@ -94,14 +97,18 @@ def main():
         generate_to_voice_edge(new_info['content'], f"{path_folder}/content-voice.aac")
 
         concat_content_videos(
-            './public/intro_ffmpeg.mp4',
+            './public/intro.mkv',
             f'./pic_affs/aff.mkv',
             f"{path_folder}/content-voice.aac",
             path_videos,
-            f'{path_folder}/{new_info['title_slug']}.mkv',
+            f'{path_folder}/result.mkv',
             f'{path_folder}/draf.mkv',
             f'{path_folder}/draf2.mkv',
         )
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Thời gian chạy: {elapsed_time:.2f} giây")
         
     except Exception as e:
         print(current_link)
