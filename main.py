@@ -118,7 +118,7 @@ def main():
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Thời gian chạy: {elapsed_time:.2f} giây")
-        # insert_link(current_link)
+        insert_link(current_link)
         while os.path.exists(f'{path_folder}/result.mp4'):
             print('đợi xóa file result.txt')
             time.sleep(5)
