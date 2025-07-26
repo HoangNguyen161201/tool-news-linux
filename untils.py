@@ -595,17 +595,11 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
         "-f", "concat",
         "-safe", "0",
         "-i", list_file,
-        "-c:v", "libx264",     # encode video về H.264 (tương thích mp4)
-        "-preset", "veryfast", # encode nhanh
-        "-crf", "23",          # chất lượng (0-51, càng thấp càng nét)
-        "-c:a", "aac",         # encode audio về AAC (hợp lệ với mp4)
-        "-b:a", "192k",        # bitrate âm thanh
-        './t.mp4',
+        "-c", "copy",
+        out_path,
         "-progress", "-",
         "-nostats"
     ]
-
-
 
     subprocess.run(command)
     os.remove(list_file)
@@ -615,12 +609,12 @@ def normalize_video(input_path, output_path):
     command = [
         "ffmpeg", "-y",
         "-i", input_path,
-        "-vf", "scale=1280:-2,fps=30",   # scale + force 30fps
+        "-vf", "scale=1920:1080,fps=30",   # upscale lên 1080p + 30fps
         "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-crf", "28",                    # Giữ chất lượng ở mức khá
+        "-preset", "ultrafast",            # Giảm tải CPU (dùng cho máy yếu)
+        "-crf", "23",                      # CRF 23 là chất lượng vừa tốt vừa nhẹ hơn 28
         "-c:a", "aac",
-        "-b:a", "128k",
+        "-b:a", "96k",                     # 96kbps là ok cho YouTube
         "-ar", "44100",
         "-ac", "2",
         "-movflags", "+faststart",

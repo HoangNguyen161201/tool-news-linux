@@ -31,6 +31,7 @@ def main():
                 os.path.abspath(f'./{title_slug}.mp4'),
                 os.path.abspath(f"./thumbnail.jpg"),
             )
+            os.remove(f'./{title_slug}.mp4')
             time.sleep(1200)
         else: 
             print('chưa tạo video mới')

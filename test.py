@@ -14,25 +14,21 @@ with open(list_file, "w", encoding="utf-8") as f:
     f.write(f"file '{os.path.abspath('./videos/draf3.mkv')}'\n")
     
 
-command = [
-    "ffmpeg",
-    "-f", "concat",
-    "-safe", "0",
-    "-i", list_file,
-    "-c:v", "libx264",     # encode video về H.264 (tương thích mp4)
-    "-preset", "veryfast", # encode nhanh
-    "-crf", "23",          # chất lượng (0-51, càng thấp càng nét)
-    "-c:a", "aac",         # encode audio về AAC (hợp lệ với mp4)
-    "-b:a", "192k",        # bitrate âm thanh
-    './t.mp4',
-    "-progress", "-",
-    "-nostats"
-]
+    command = [
+        "ffmpeg",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", list_file,
+        "-c", "copy",
+        './t.mp4',
+        "-progress", "-",
+        "-nostats"
+    ]
 
 
 subprocess.run(command)
 os.remove(list_file)
 
-# # check_file_exists_on_vps('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos/result.mkv')
-# # download_file_from_vps('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos/result.mkv', './result.mvk')
-# # delete_remote_folder('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos')
+# # # check_file_exists_on_vps('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos/result.mkv')
+# # # download_file_from_vps('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos/result.mkv', './result.mvk')
+# # # delete_remote_folder('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos')
