@@ -1,8 +1,9 @@
-from untils import normalize_video
+from untils import normalize_video, generate_to_voice_edge
 import os
 import subprocess
-normalize_video('./public/intro.mp4', './public/intro.mkv')
-normalize_video('./videos/draf2.mkv', './videos/draf3.mkv')
+# generate_to_voice_edge("If you're looking for an awesome product at a great price, be sure to check out the link in the description!", './public/aff.aac')
+# normalize_video('./public/intro.mp4', './public/intro.mkv')
+# normalize_video('./videos/draf2.mkv', './videos/draf3.mkv')
 
 # Tạo file danh sách tạm thời
 list_file = "video_list.txt"

@@ -315,7 +315,28 @@ def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0])
     response = model.generate_content(content)
     return response.text
 
-
+def generate_title_description_improved(title, description):
+    while True:
+        title_des = generate_content(f'''tôi đang có các thông tin như sau:
+                                    - title: {title}
+                                    - description: {description}
+                                    hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
+                                    Trả ra dưới định dạng như sau:
+                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
+                                    Từ dòng thứ 2 trở đi: là description. 
+                                    Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
+                                    api_key= gemini_keys[1]
+                        )
+        
+        lines = title_des.splitlines()
+        title_line = lines[0].strip()
+        if len(title_line) < 100:
+            desc = "\n".join(lines[1:]).strip()
+            desc = re.sub(r'[ \t]+', ' ', desc)
+            return {
+                "title": title_line,
+                "description": desc
+            }
 
 # tạo lại nội dung content
 def generate_title_description_improved(title, description):
@@ -498,7 +519,7 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
 
     asyncio.run(_run())
 
-def concat_content_videos(intro_path, short_link_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
+def concat_content_videos(intro_path, short_link_path, short_link_out_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
     # Load âm thanh
     audio_duration = get_media_duration(audio_out_path)
     duration_video = 0
@@ -547,13 +568,14 @@ def concat_content_videos(intro_path, short_link_path, audio_out_path, video_pat
     # cắt đúng duration và gắn âm thanh
     import_audio_to_video(draf_out_path, draf_out_path_2, audio_out_path, audio_duration)
     normalize_video(draf_out_path_2, draf_out_path_3)
+    normalize_video(short_link_path, short_link_out_path)
 
 
     # nối intro với video
     with open(list_file, "w", encoding="utf-8") as f:
         f.write(f"file '{os.path.abspath(intro_path)}'\n")
         if short_link_path is not None:
-            f.write(f"file '{os.path.abspath(short_link_path)}'\n")
+            f.write(f"file '{os.path.abspath(short_link_out_path)}'\n")
         f.write(f"file '{os.path.abspath(draf_out_path_3)}'\n")
 
     command = [

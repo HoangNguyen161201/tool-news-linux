@@ -99,12 +99,13 @@ def main():
         concat_content_videos(
             './public/intro.mkv',
             f'./pic_affs/aff.mkv',
+            f"{path_folder}/aff.mkv",
             f"{path_folder}/content-voice.aac",
             path_videos,
             f'{path_folder}/result.mkv',
             f'{path_folder}/draf.mkv',
             f'{path_folder}/draf2.mkv',
-            f'{path_folder}/draf3.mkv'
+            f'{path_folder}/draf3.mkv',
         )
 
         end_time = time.time()
