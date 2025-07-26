@@ -27,8 +27,8 @@ def main():
         
         # kết nối db và kiểm tra có link tồn tại chưa, chưa thì lấy và làm video
         for link in link_news:
-            if not check_link_exists(f'https://www.theguardian.com/{link}'):
-                current_link = f'https://www.theguardian.com/{link}'
+            if not check_link_exists(f'https://www.theguardian.com{link}'):
+                current_link = f'https://www.theguardian.com{link}'
                 break
 
         # nếu không có link thì bắn lỗi
@@ -110,7 +110,7 @@ def main():
             f'{path_folder}/result.txt',
             [
                 new_info['title'],
-                f'news,{new_info['tags']},breaking news,current events,'
+                f'news,{new_info['tags']},breaking news,current events,',
                 f"{new_info['description']}\n\n(tags):\n{', '.join(new_info['tags'].split(','))}"
             ]
         )

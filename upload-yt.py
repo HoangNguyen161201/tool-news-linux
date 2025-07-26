@@ -2,6 +2,7 @@ from untils import upload_yt, check_file_exists_on_vps, download_file_from_vps, 
 import time
 import os
 
+
 def main():
     while True:
         check_exists_file_video = check_file_exists_on_vps('207.246.125.31', 'root', '6{zC6v_6!btTCJ=e', '/root/tool-news-linux/videos/result.mkv')
