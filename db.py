@@ -1,60 +1,35 @@
-import sqlite3
-
-def connect_db(name = 'mydatabase.db'):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
-
-    cursor.execute('''CREATE TABLE IF NOT EXISTS links 
-                    (id INTEGER PRIMARY KEY, url TEXT)''')
-    
-
-    conn.commit()
-    conn.close()
-
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 # -------------- links news
-def get_all_links(name = 'mydatabase.db'):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
+def get_all_links():
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db = client["news"]
+    collection = db["links"]
+    # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
+    links = [doc["link"] for doc in collection.find({}, {"link": 1, "_id": 0})]
+    return links
 
-    cursor.execute("SELECT * FROM links")
-    
-    result = cursor.fetchall()
-
-    conn.close()
-
-    return result
-
-
-
-def check_link_exists(url, name = 'mydatabase.db'):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM links WHERE url=?", (url,))
-    
-    result = cursor.fetchone()
-
-    conn.close()
-
-    if result:
-        return True
-    else:
-        return False
+   
+def check_link_exists(link):
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db = client["news"]
+    collection = db["links"]
+    return collection.find_one({"link": link}) is not None
     
 
-def insert_link(url, name = 'mydatabase.db'):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
+def insert_link(link):
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db = client["news"]
+    collection = db["links"]
+    collection.insert_one({"link": link})
 
-    cursor.execute("INSERT INTO links (url) VALUES (?)", (url,))
-    conn.commit()
-    conn.close()
-
-def delete_link(url, name = 'mydatabase.db'):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
-
-    cursor.execute("DELETE FROM links WHERE url=?", (url,))
-    conn.commit()
-    conn.close()
+def delete_link(link):
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db = client["news"]
+    collection = db["links"]
+    collection.delete_one({"link": link})

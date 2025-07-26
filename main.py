@@ -3,7 +3,7 @@ import os
 from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
 from untils import concat_content_videos, get_img_gif_person, get_info_new, generate_image, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item
-from db import check_link_exists, connect_db, insert_link, get_all_links, delete_link 
+from db import check_link_exists, insert_link
 import random
 from concurrent.futures import ProcessPoolExecutor, wait
 from slugify import slugify
@@ -26,17 +26,15 @@ def main():
         link_news = get_all_link_in_theguardian_new()
         
         # kết nối db và kiểm tra có link tồn tại chưa, chưa thì lấy và làm video
-        connect_db()
         for link in link_news:
             if not check_link_exists(f'https://www.theguardian.com/{link}'):
-                current_link = link
+                current_link = f'https://www.theguardian.com/{link}'
                 break
 
         # nếu không có link thì bắn lỗi
         if (current_link is None):
             raise Exception("Lỗi xảy ra, không tồn tại link hoặc đã hết tin tức")
 
-        current_link = f'https://www.theguardian.com/{current_link}'
         print(current_link)
 
         # lấy thông tin của video
@@ -112,7 +110,7 @@ def main():
             f'{path_folder}/result.txt',
             [
                 new_info['title'],
-                f'news, {', '.join(new_info['tags'].split(','))}, breaking news, current events',
+                f'news,{new_info['tags']},breaking news,current events,'
                 f"{new_info['description']}\n\n(tags):\n{', '.join(new_info['tags'].split(','))}"
             ]
         )
@@ -120,6 +118,7 @@ def main():
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Thời gian chạy: {elapsed_time:.2f} giây")
+        insert_link(current_link)
         while os.path.exists(f'{path_folder}/result.mkv'):
             print('đợi xóa file result.txt')
             time.sleep(5)

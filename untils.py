@@ -17,6 +17,17 @@ import google.generativeai as genai
 import edge_tts
 import uuid
 import paramiko
+from selenium.webdriver.common.keys import Keys
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import Select
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+import pyperclip
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -632,6 +643,197 @@ def write_lines_to_file(filepath, contents):
         for line in contents:
             f.write(line.rstrip() + "\n")  # đảm bảo mỗi dòng kết thúc bằng \n
 
+def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbnail, comment = None):
+    ### dùng để tạo ra 1 user
+    # chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+    # user_data_dir = "C:/Path/To/Chrome/news-us"
+    # subprocess.Popen([chrome_path, f'--remote-debugging-port=9223', f'--user-data-dir={user_data_dir}'])
+    # time.sleep(5)
+
+
+    # Tạo đối tượng ChromeOptions
+    chrome_options = Options()
+
+    # Chỉ định đường dẫn đến thư mục user data
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument(f"user-data-dir={user_data_dir}")
+    chrome_options.add_argument("profile-directory=Default")  # Nếu bạn muốn sử dụng profile mặc định
+    # chrome_options.add_argument("--headless")  # Chạy trong chế độ không giao diện
+    # chrome_options.add_argument("--disable-gpu")  # Tắt GPU (thường dùng trong môi trường máy chủ)
+
+    # Sử dụng Service để chỉ định ChromeDriver
+    service = Service(ChromeDriverManager().install())
+
+
+    # Khởi tạo WebDriver với các tùy chọn
+    browser = webdriver.Chrome(service=service, options=chrome_options)
+
+    browser.get("https://studio.youtube.com/")
+    # await browser load end
+    WebDriverWait(browser, 100).until(
+        EC.presence_of_all_elements_located((By.ID, 'create-icon'))
+    )
+
+
+    browser.find_element(By.ID, 'create-icon').click()
+    time.sleep(1)
+
+    browser.find_element(By.ID, 'text-item-0').click()
+    time.sleep(10)
+
+    # upload video
+    print('upload video in youtube')
+    file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
+    file_input.send_keys(video_path)
+    time.sleep(3)
+
+
+    # upload thumbnail
+    print('upload thumbnail in youtube')
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'file-loader'))
+    )
+    thumbnail_input = browser.find_element(By.ID, 'file-loader')
+    thumbnail_input.send_keys(video_thumbnail)
+    time.sleep(3)
+
+
+    # enter title
+    print('nhập title in youtube')
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'textbox'))
+    )
+    title_input = browser.find_element(By.ID, 'textbox')
+    title_input.clear()
+    time.sleep(1)
+    title_input.send_keys(title)
+    time.sleep(1)
+
+    # enter description
+    print('nhập description in youtube')
+    des_input = browser.find_elements(By.ID, 'textbox')[1]
+    des_input.clear()
+    time.sleep(1)
+    # Copy vào clipboard
+    pyperclip.copy(description)
+    des_input.click()
+    time.sleep(1)
+    des_input.send_keys(Keys.CONTROL, 'v')
+    time.sleep(1)
+
+    # enter hiển thị thêm
+    # Đợi cho phần tử scrollable-content xuất hiện
+    scrollable_element = WebDriverWait(browser, 10).until(
+        EC.presence_of_element_located((By.ID, "scrollable-content"))
+    )
+    # Scroll xuống cuối cùng của phần tử scrollable-content
+    browser.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", scrollable_element)
+    time.sleep(2)
+
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'toggle-button'))
+    )
+    show_more_btn = browser.find_element(By.ID, 'toggle-button')
+    show_more_btn.click()
+    time.sleep(2)
+
+    # enter tags
+    print('nhập tags in youtube')
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'text-input'))
+    )
+    tags_input = browser.find_element(By.ID, 'text-input')
+    tags_input.send_keys(tags)
+    time.sleep(2)
+
+    # next btn
+    browser.find_element(By.ID, 'next-button').click()
+    time.sleep(2)
+
+    # # add end screens
+    # WebDriverWait(browser, 10).until(
+    #     EC.presence_of_all_elements_located((By.ID, 'endscreens-button'))
+    # )
+    # browser.find_element(By.ID, 'endscreens-button').click()
+    # time.sleep(2)
+    # canvas_element = WebDriverWait(browser, 10).until(
+    #     EC.element_to_be_clickable((By.TAG_NAME, "canvas"))
+    # )
+    # browser.execute_script("arguments[0].click();", canvas_element)
+    # time.sleep(2)
+    # browser.find_element(By.ID, 'save-button').click()
+    # time.sleep(4)
+
+    # next
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'next-button'))
+    )
+    browser.find_element(By.ID, 'next-button').click()
+    time.sleep(2)
+
+    while True:
+        element = browser.find_elements(By.XPATH, '//*[@check-status="UPLOAD_CHECKS_DATA_COPYRIGHT_STATUS_COMPLETED" or @check-status="UPLOAD_CHECKS_DATA_COPYRIGHT_STATUS_STARTED"]')
+        
+        if element:
+            break  # Thoát vòng lặp nếu tìm thấy
+
+        print("Chưa tìm thấy, tiếp tục kiểm tra...")
+        time.sleep(2)  # Đợi 2 giây trước khi kiểm tra lại
+
+    browser.find_element(By.ID, 'next-button').click()
+    time.sleep(2)
+
+
+    # done
+    print('upload video in youtube thành công')
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'done-button'))
+    )
+    browser.find_element(By.ID, 'done-button').click()
+
+    # vào youtube để nhập bình luận
+    if comment is not None:
+        WebDriverWait(browser, 100).until(
+            EC.presence_of_all_elements_located((By.ID, 'share-url'))
+        )
+        link_redirect = browser.find_element(By.ID, 'share-url')
+        href = link_redirect.get_attribute('href')
+        browser.get(href)
+        WebDriverWait(browser, 100).until(
+            EC.presence_of_all_elements_located((By.ID, 'above-the-fold'))
+        )
+        time.sleep(5)
+        is_Find_comment = False
+        while  is_Find_comment is False:
+            try:
+                browser.execute_script("window.scrollBy(0, 50);")
+                time.sleep(1)
+                comment_box = browser.find_element(By.ID, 'simplebox-placeholder')
+                if(comment_box):
+                    is_Find_comment = True
+                time.sleep(3)
+            except:
+                time.sleep(3)
+
+        comment_box = browser.find_element(By.ID, 'simplebox-placeholder')
+        comment_box.click()
+        textarea = WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div#contenteditable-root[contenteditable='true']"))
+        )
+        pyperclip.copy(comment)
+        textarea.click()
+        time.sleep(1)
+        textarea.send_keys(Keys.CONTROL, 'v')
+        time.sleep(2)
+        submit_button = WebDriverWait(browser, 10).until(
+            EC.presence_of_element_located((By.ID, "submit-button"))
+        )
+        submit_button.click()
+
+    time.sleep(10)
+    browser.quit()
+
+
 def download_file_from_vps(host, username, password, remote_path, local_path, port = 22):
     transport = paramiko.Transport((host, port))
     transport.connect(username=username, password=password)
@@ -681,3 +883,4 @@ def check_file_exists_on_vps(host, username, password, remote_path, port=22):
     except Exception as e:
         print(f"⚠️ Lỗi kiểm tra file: {e}")
         return False
+    
