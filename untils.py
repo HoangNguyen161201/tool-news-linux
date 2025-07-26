@@ -337,7 +337,7 @@ def generate_title_description_improved(title, description):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[1]
+                                    api_key= gemini_keys[0]
                         )
         
         lines = title_des.splitlines()
@@ -361,7 +361,7 @@ def generate_title_description_improved(title, description):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[1]
+                                    api_key= gemini_keys[0]
                         )
         
         lines = title_des.splitlines()
@@ -386,7 +386,7 @@ def generate_content_improved(content, title):
         - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
         - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
         - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
-        ''', api_key= gemini_keys[1])
+        ''', api_key= gemini_keys[0])
         
         
 def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
@@ -595,11 +595,17 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
         "-f", "concat",
         "-safe", "0",
         "-i", list_file,
-        "-c", "copy",
-        out_path,
+        "-c:v", "libx264",     # encode video về H.264 (tương thích mp4)
+        "-preset", "veryfast", # encode nhanh
+        "-crf", "23",          # chất lượng (0-51, càng thấp càng nét)
+        "-c:a", "aac",         # encode audio về AAC (hợp lệ với mp4)
+        "-b:a", "192k",        # bitrate âm thanh
+        './t.mp4',
         "-progress", "-",
         "-nostats"
     ]
+
+
 
     subprocess.run(command)
     os.remove(list_file)
@@ -608,16 +614,15 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
 def normalize_video(input_path, output_path):
     command = [
         "ffmpeg", "-y",
-        "-threads", "1",                  # Chỉ dùng 1 CPU
         "-i", input_path,
-        "-vf", "scale=1280:-2",          # Giảm độ phân giải nếu không cần 1080p
+        "-vf", "scale=1280:-2,fps=30",   # scale + force 30fps
         "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-crf", "32",                    # Tăng CRF để giảm dung lượng + RAM
+        "-preset", "veryfast",
+        "-crf", "28",                    # Giữ chất lượng ở mức khá
         "-c:a", "aac",
-        "-b:a", "96k",                   # Bitrate âm thanh thấp hơn nữa
-        "-ar", "22050",                  # Giảm sample rate âm thanh
-        "-ac", "1",                      # Mono
+        "-b:a", "128k",
+        "-ar", "44100",
+        "-ac", "2",
         "-movflags", "+faststart",
         output_path
     ]
