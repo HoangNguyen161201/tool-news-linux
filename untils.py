@@ -298,11 +298,11 @@ def generate_image_and_video_aff_and_get_three_item():
 
         generate_video_by_image(
                         f'{path_folder}/pic_result.png',
-                        f'{path_folder}/daft.mp4',
+                        f'{path_folder}/daft.mkv',
                         audio.duration
                     )
 
-        import_audio_to_video(f'{path_folder}/daft.mp4', f'{path_folder}/aff.mp4', audio.duration,  './public/aff.aac')
+        import_audio_to_video(f'{path_folder}/daft.mkv', f'{path_folder}/aff.mkv', audio.duration,  './public/aff.aac')
         print(audio.duration)
         
         audio.close()
