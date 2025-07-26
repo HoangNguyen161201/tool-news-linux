@@ -10,10 +10,10 @@ from slugify import slugify
 import time
 
 def main():
-
-    start_time = time.time()
-    current_link = None
-    try:
+    while True:
+        start_time = time.time()
+        current_link = None
+        
         # tạo folder để chứa video
         path_folder = f'./videos'
         try:
@@ -120,10 +120,12 @@ def main():
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Thời gian chạy: {elapsed_time:.2f} giây")
-        
-    except Exception as e:
-        print(current_link)
-        print(f'loi xay ra: {e}')  
+        while os.path.exists(f'{path_folder}/result.mkv'):
+            print('đợi xóa file result.txt')
+            time.sleep(5)
+        print('tiếp tục')
+
+
 
 if __name__ == "__main__":
     main()
