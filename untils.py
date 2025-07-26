@@ -596,16 +596,17 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
 def normalize_video(input_path, output_path):
     command = [
         "ffmpeg", "-y",
-        "-threads", "1",                   # Giới hạn 1 CPU
+        "-threads", "1",                  # Chỉ dùng 1 CPU
         "-i", input_path,
+        "-vf", "scale=1280:-2",          # Giảm độ phân giải nếu không cần 1080p
         "-c:v", "libx264",
-        "-preset", "ultrafast",           # Encode nhanh, ít RAM
-        "-crf", "28",                     # Chất lượng ok + nhẹ hơn
+        "-preset", "ultrafast",
+        "-crf", "32",                    # Tăng CRF để giảm dung lượng + RAM
         "-c:a", "aac",
-        "-b:a", "128k",                   # Bitrate âm thanh thấp hơn
-        "-ar", "44100",                   # Sample rate
-        "-ac", "2",                       # Stereo
-        "-movflags", "+faststart",       # Tối ưu phát online
+        "-b:a", "96k",                   # Bitrate âm thanh thấp hơn nữa
+        "-ar", "22050",                  # Giảm sample rate âm thanh
+        "-ac", "1",                      # Mono
+        "-movflags", "+faststart",
         output_path
     ]
     subprocess.run(command)
