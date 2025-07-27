@@ -337,7 +337,7 @@ def generate_title_description_improved(title, description):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[1]
+                                    api_key= gemini_keys[2]
                         )
         
         lines = title_des.splitlines()
@@ -361,7 +361,7 @@ def generate_title_description_improved(title, description):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[1]
+                                    api_key= gemini_keys[2]
                         )
         
         lines = title_des.splitlines()
@@ -386,7 +386,7 @@ def generate_content_improved(content, title):
         - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
         - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
         - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
-        ''', api_key= gemini_keys[1])
+        ''', api_key= gemini_keys[2])
         
         
 def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
