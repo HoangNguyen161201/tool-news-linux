@@ -608,16 +608,15 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
 def normalize_video(input_path, output_path):
     command = [
         "ffmpeg", "-y",
+        "-threads", "1",                  # Chỉ dùng 1 CPU
         "-i", input_path,
-        "-vf", "scale=1920:1080,fps=30",  # đảm bảo 30 fps và độ phân giải 1080p
-        "-r", "30",                       # đặt output frame rate chính xác 30
         "-c:v", "libx264",
         "-preset", "ultrafast",
-        "-crf", "23",
+        "-crf", "32",                    # Tăng CRF để giảm dung lượng + RAM
         "-c:a", "aac",
-        "-b:a", "128k",                   # tăng bitrate audio lên 128kbps
-        "-ar", "44100",                   # giữ nguyên sample rate
-        "-ac", "2",
+        "-b:a", "96k",                   # Bitrate âm thanh thấp hơn nữa
+        "-ar", "22050",                  # Giảm sample rate âm thanh
+        "-ac", "1",                      # Mono
         "-movflags", "+faststart",
         output_path
     ]

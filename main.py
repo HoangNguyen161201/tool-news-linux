@@ -127,7 +127,7 @@ def main():
             f"{path_folder}/aff.mkv",
             f"{path_folder}/content-voice.aac",
             path_videos,
-            f"{path_folder}/result.mp4",
+            f"{path_folder}/result.mkv",
             f"{path_folder}/draf.mkv",
             f"{path_folder}/draf2.mkv",
             f"{path_folder}/draf3.mkv",
@@ -137,7 +137,7 @@ def main():
         print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
         insert_link(current_link)  # Mở lại khi cần lưu vào DB
         # chờ cho đến khi file bị xoá thủ công để tiếp tục
-        while os.path.exists(f"{path_folder}/result.mp4"):
+        while os.path.exists(f"{path_folder}/result.mkv"):
             print('Đợi xóa file result.mp4...')
             time.sleep(5)
         print('Tiếp tục...')
