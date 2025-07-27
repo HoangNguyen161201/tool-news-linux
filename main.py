@@ -135,9 +135,7 @@ def main():
 
         end_time = time.time()
         print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
-
-        # insert_link(current_link)  # Mở lại khi cần lưu vào DB
-
+        insert_link(current_link)  # Mở lại khi cần lưu vào DB
         # chờ cho đến khi file bị xoá thủ công để tiếp tục
         while os.path.exists(f"{path_folder}/result.mp4"):
             print('Đợi xóa file result.mp4...')
