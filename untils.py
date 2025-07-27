@@ -101,7 +101,7 @@ def get_img_gif_person():
 def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     def resize_to_fit(image, max_width, max_height):
         h, w = image.shape[:2]
-        scale = min(max_width / w, max_height / h, 1.0)  # chỉ scale nhỏ
+        scale = min(max_width / w, max_height / h)
         return cv2.resize(image, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
 
     response = requests.get(link)
@@ -116,7 +116,7 @@ def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     image = image[150:-150, 150:-150]
 
     # === ẢNH BLUR ===
-    blurred = cv2.resize(image, (1920, 1080), interpolation=cv2.INTER_AREA)
+    blurred = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
     blurred = cv2.copyMakeBorder(blurred, 25, 25, 25, 25, cv2.BORDER_CONSTANT, value=(255, 255, 255))
     blurred = cv2.GaussianBlur(blurred, (0, 0), 15)
 
