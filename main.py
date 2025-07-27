@@ -94,7 +94,7 @@ def main():
                 f"{path_folder}/thumbnail.jpg",
                 new_info['title'].replace('*', ''))
             future2 = executor.submit(generate_to_voice_edge, new_info['content'], f"{path_folder}/content-voice.aac")
-            future3 = write_lines_to_file(
+            future3 = executor.submit(write_lines_to_file,
                         f'{path_folder}/result.txt',
                         [
                             new_info['title'],
