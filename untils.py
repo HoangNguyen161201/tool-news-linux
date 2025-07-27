@@ -609,13 +609,14 @@ def normalize_video(input_path, output_path):
     command = [
         "ffmpeg", "-y",
         "-i", input_path,
-        "-vf", "scale=1920:1080,fps=30",   # upscale lên 1080p + 30fps
+        "-vf", "scale=1920:1080,fps=30",  # đảm bảo 30 fps và độ phân giải 1080p
+        "-r", "30",                       # đặt output frame rate chính xác 30
         "-c:v", "libx264",
-        "-preset", "ultrafast",            # Giảm tải CPU (dùng cho máy yếu)
-        "-crf", "23",                      # CRF 23 là chất lượng vừa tốt vừa nhẹ hơn 28
+        "-preset", "ultrafast",
+        "-crf", "23",
         "-c:a", "aac",
-        "-b:a", "96k",                     # 96kbps là ok cho YouTube
-        "-ar", "44100",
+        "-b:a", "128k",                   # tăng bitrate audio lên 128kbps
+        "-ar", "44100",                   # giữ nguyên sample rate
         "-ac", "2",
         "-movflags", "+faststart",
         output_path
