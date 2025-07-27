@@ -40,7 +40,7 @@ def main():
         # kiểm tra link nào chưa xử lý
         for link in link_news:
             full_link = f'https://www.theguardian.com{link}'
-            if True:
+            if not check_link_exists(full_link):
                 current_link = full_link
                 break
 
@@ -88,7 +88,6 @@ def main():
             raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
 
         print(new_info)
-
         # tạo thumbnail, voice, file txt — vẫn song song nhưng nhẹ hơn
         with ThreadPoolExecutor(max_workers=3) as executor:
             future1 = executor.submit(
