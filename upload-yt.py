@@ -6,7 +6,7 @@ import subprocess
 
 # ## dùng để tạo ra 1 user
 # chrome_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"
-# user_data_dir = "C:/Path/To/Chrome/news-us-news"
+# user_data_dir = "C:/Path/To/Chrome/news-us-news-2"
 # subprocess.Popen([chrome_path, f'--remote-debugging-port=9223', f'--user-data-dir={user_data_dir}'])
 # time.sleep(10000)
 
@@ -33,7 +33,7 @@ def main():
             title_slug = slugify(title)
             os.rename('./result.mkv', f'./{title_slug}.mkv')
             upload_yt(
-                "C:/Path/To/Chrome/news-us-news",
+                "C:/Path/To/Chrome/news-us-news-2",
                 title,
                 description,
                 tags,
