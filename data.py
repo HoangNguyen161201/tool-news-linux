@@ -23,5 +23,3 @@ gemini_keys = [
     'AIzaSyAO3zWuhyUKzPsweyiEDKcuiZxLKkdUNNk',
     'AIzaSyA9T58LWbmaHJFuCPCbJiXxPx_Y2DoiIVk'
 ]
-
-

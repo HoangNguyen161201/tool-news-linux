@@ -8,6 +8,7 @@ import random
 from concurrent.futures import ThreadPoolExecutor, wait
 from slugify import slugify
 import time
+from data import gemini_keys
 
 def create_video_by_image(path_folder, key, link):
     img_path = f"{path_folder}/image-{key}.jpg"
@@ -22,6 +23,8 @@ def create_video_by_image(path_folder, key, link):
     return f"{path_folder}/video-{key}.mkv"
 
 def main():
+    gemini_key_index = 0
+
     while True:
         try:
             start_time = time.time()
@@ -62,8 +65,8 @@ def main():
 
             # chạy song song các task: xử lý title/desc, content, ảnh aff, video từng ảnh
             with ThreadPoolExecutor(max_workers=6) as executor:
-                future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'])
-                future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'])
+                future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'], gemini_keys[gemini_key_index])
+                future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'], gemini_keys[gemini_key_index])
                 future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
                 future_videos = [
                     executor.submit(create_video_by_image, path_folder, key, link)
@@ -152,7 +155,10 @@ def main():
                     data += 5
             else:
                 print(f"[LỖI KHÁC] {message}")
-                raise  # Nếu không phải lỗi hết link thì raise bình thường
+                gemini_key_index += 1
+                if gemini_key_index > 2:
+                    gemini_key_index = 0
+                time.sleep(60)
 
 if __name__ == "__main__":
     main()
