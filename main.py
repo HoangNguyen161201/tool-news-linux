@@ -64,12 +64,19 @@ def main():
             future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'])
             future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'])
             future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
+            future_videos = [
+                executor.submit(create_video_by_image, path_folder, key, link)
+                for key, link in enumerate(new_info['picture_links'])
+            ]
 
-            wait([future1, future2, future3])
+            wait([future1, future2, future3] + future_videos)
 
             result1 = future1.result()
             result2 = future2.result()
             products = future3.result()
+
+            for fut in future_videos:
+                path_videos.append(fut.result())
 
             # cập nhật nội dung mới vào new_info
             new_info['title'] = result1['title']
@@ -81,10 +88,6 @@ def main():
             raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
 
         print(new_info)
-        for key, link in enumerate(new_info['picture_links']):
-            data = create_video_by_image( path_folder, key, link)
-            path_videos.append(data)
-                 
         # tạo thumbnail, voice, file txt — vẫn song song nhưng nhẹ hơn
         with ThreadPoolExecutor(max_workers=3) as executor:
             future1 = executor.submit(
