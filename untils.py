@@ -321,7 +321,7 @@ def generate_image_and_video_aff_and_get_three_item():
         return None
 
 
-def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0]):
+def generate_content(content, model='gemini-2.0-flash-lite', api_key= gemini_keys[0]):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model)
     response = model.generate_content(content)
