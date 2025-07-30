@@ -24,7 +24,7 @@ def create_video_by_image(path_folder, key, link):
 
 def main():
     gemini_key_index = 0
-
+    current_link = None
     while True:
         try:
             start_time = time.time()
@@ -146,6 +146,7 @@ def main():
             print('Tiếp tục...')
         except Exception as e:
             message = str(e)
+
             if "Lỗi xảy ra, không tồn tại link hoặc đã hết tin tức" in message:
                 print(f"{message} → Đợi 20 phút rồi thử lại...")
                 data = 5
@@ -153,6 +154,9 @@ def main():
                     print('đợi 20 giây vì hết link')
                     time.sleep(5)
                     data += 5
+            elif "Lỗi xảy ra, không có thông tin của content" in message:
+                insert_link(current_link)
+                print(f"Lỗi xảy ra, không có thông tin của content")
             else:
                 print(f"[LỖI KHÁC] {message}")
                 gemini_key_index += 1
