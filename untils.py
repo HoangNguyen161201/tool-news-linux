@@ -28,6 +28,7 @@ from selenium.webdriver.support.ui import Select
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pyperclip
+from data import data_support
 
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -141,7 +142,7 @@ def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     cv2.imwrite(out_blur_path, blurred)
 
 
-def generate_video_by_image( in_path, out_path, second):
+def generate_video_by_image( in_path, out_path, second, is_set_avatar = True):
     width, height = 1920, 1080
     duration = second
     os.makedirs('./temp', exist_ok=True)
@@ -154,7 +155,7 @@ def generate_video_by_image( in_path, out_path, second):
         "-filter_complex",
         f"""
         [0:v]scale={width}:{height},setsar=1,setpts=PTS-STARTPTS[bg]; \
-        [1:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7,setsar=1[avatar]; \
+        [1:v]scale=200:200,format=rgba,colorchannelmixer=aa={0.7 if is_set_avatar else 0},setsar=1[avatar]; \
         [bg][avatar]overlay={width - 270}:50
         """.replace('\n', ''),
         "-r", "1",                   # Giảm FPS cho nhẹ
@@ -236,6 +237,9 @@ def import_audio_to_video(in_path, out_path, audio_path, audio_duration):
     subprocess.run(command)
 
 def generate_image_and_video_aff_and_get_three_item():
+    support_randoom = data_support
+    random.shuffle(support_randoom)
+    support_randoom = random.sample(support_randoom, 3)
     uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     # Create a new client and connect to the server
     client = MongoClient(uri, server_api=ServerApi('1'))
@@ -319,6 +323,127 @@ def generate_image_and_video_aff_and_get_three_item():
     except Exception as e:
         print(f"❌ Error: {e}")
         return None
+    
+# amazon -----------------------------
+def process_image_support(
+    input_url,
+    output_path,
+    discount=0,
+    fixed_width=410,
+    max_height=650,
+    border_width=10,
+    border_color='#CDCDCD',
+    corner_radius=20,
+):
+    # Tải ảnh
+    response = requests.get(input_url)
+    img = Image.open(BytesIO(response.content)).convert("RGBA")
+
+    # Tính lại size để KHÔNG CROP và KHÔNG MÉO
+    original_width, original_height = img.size
+    scale_w = fixed_width / original_width
+    scale_h = max_height / original_height
+    scale = min(scale_w, scale_h)
+
+    new_width = int(original_width * scale)
+    new_height = int(original_height * scale)
+
+    img = img.resize((new_width, new_height), Image.LANCZOS)
+
+    # Bo góc
+    mask = Image.new('L', (new_width, new_height), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle([0, 0, new_width, new_height], radius=corner_radius, fill=255)
+    rounded_img = Image.new("RGBA", (new_width, new_height))
+    rounded_img = Image.composite(img, rounded_img, mask)
+
+    # Thêm viền ngoài
+    bordered_width = new_width + 2 * border_width
+    bordered_height = new_height + 2 * border_width
+    bordered_img = Image.new("RGBA", (bordered_width, bordered_height), (0, 0, 0, 0))
+
+    draw = ImageDraw.Draw(bordered_img)
+    draw.rounded_rectangle(
+        [0, 0, bordered_width, bordered_height],
+        radius=corner_radius + border_width,
+        fill=border_color
+    )
+    bordered_img.paste(rounded_img, (border_width, border_width), mask=mask)
+
+    # Nếu có discount
+   
+    badge_radius = 48
+    badge_diameter = badge_radius * 2
+    badge_position = (bordered_width - badge_diameter - 10, 10)
+
+    # Vẽ hình tròn trắng
+    draw.ellipse(
+        [badge_position[0], badge_position[1], badge_position[0] + badge_diameter, badge_position[1] + badge_diameter],
+        fill="white"
+    )
+
+    # Vẽ text
+    try:
+        font = ImageFont.truetype("arial.ttf", 40)
+    except:
+        font = ImageFont.load_default()
+
+    text = f"-{discount}%" if discount > 0 else 'Hot'
+    bbox = font.getbbox(text)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    text_x = badge_position[0] + (badge_diameter - text_width) // 2
+    text_y = badge_position[1] + (badge_diameter - text_height) // 2 - 1
+
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            draw.text((text_x + dx, text_y + dy), text, font=font, fill="red")
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    bordered_img.save(output_path)
+
+def generate_image_and_video_aff_and_get_three_item_amazon():
+    try:
+        support_randoom = data_support
+        random.shuffle(support_randoom)
+        support_randoom = random.sample(support_randoom, 3)
+        link_support_images = [item['link_img'] for item in support_randoom]
+        list_discount = [item['discount'] for item in support_randoom]
+        content_supports = "\n".join([item['content'] for item in support_randoom])
+        
+        for index, item in enumerate(link_support_images):
+            print(item)
+            process_image_support(item, f'./pic_affs/support_{index}.png', list_discount[index])
+
+        # Load ảnh background
+        background = Image.open("./public/bg/support.png")  # hoặc background.png
+
+        # Load 3 ảnh sản phẩm
+        product1 = Image.open(f'./pic_affs/support_0.png')
+        product2 = Image.open(f'./pic_affs/support_1.png')
+        product3 = Image.open(f'./pic_affs/support_2.png')
+
+        # Dán các sản phẩm vào ảnh nền tại vị trí mong muốn
+        background.paste(product1, (200, 245), product1.convert("RGBA"))
+        background.paste(product2, (715, 245), product2.convert("RGBA"))
+        background.paste(product3, (1230, 245), product3.convert("RGBA"))
+
+        # Lưu kết quả
+        background.save("./pic_affs/drag.png")
+        audio_duration = get_media_duration('./public/aff.aac')
+        generate_video_by_image(
+                        f'./pic_affs/drag.png',
+                        f'./pic_affs/daft.mkv',
+                        audio_duration,
+                        False
+                    )
+        import_audio_to_video(f'./pic_affs/daft.mkv', f'./pic_affs/aff.mkv',  './public/aff.aac', audio_duration)
+        
+        print("✅ Done")
+        return content_supports
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return None
 
 
 def generate_content(content, model='gemini-2.0-flash-lite', api_key= gemini_keys[0]):
@@ -358,8 +483,8 @@ def generate_title_description_improved(title, description, gemini_key = gemini_
                                     - description: {description}
                                     hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
                                     Trả ra dưới định dạng như sau:
-                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title).
-                                    Từ dòng thứ 2 trở đi: là description. 
+                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title, và không có ghi là dòng 1 hay gì hết, ghi title mà bạn generate ra thôi).
+                                    Từ dòng thứ 2 trở đi: là description (không được ghi dòng 2 hay option 2, chỉ trả ra description mà bạn generate thôi). 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
                                     api_key= gemini_key
                         )

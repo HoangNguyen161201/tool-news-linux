@@ -2,7 +2,7 @@ import shutil
 import os
 from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
 from untils import concat_content_videos, get_img_gif_person, generate_image, generate_content_improved
-from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item
+from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
 from db import check_link_exists, insert_link
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -67,7 +67,9 @@ def main():
             with ThreadPoolExecutor(max_workers=6) as executor:
                 future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'], gemini_keys[gemini_key_index])
                 future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'], gemini_keys[gemini_key_index])
-                future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
+                # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
+                future3 = executor.submit(generate_image_and_video_aff_and_get_three_item_amazon)
+                
                 future_videos = [
                     executor.submit(create_video_by_image, path_folder, key, link)
                     for key, link in enumerate(new_info['picture_links'])
@@ -115,7 +117,7 @@ def main():
                     [
                         new_info['title'],
                         f"news,{new_info['tags']},breaking news,current events,",
-                        f"{new_info['description']}\n\n(tags):\n{', '.join(new_info['tags'].split(','))}"
+                        f"{new_info['description']}\n\n{products}\n\n(tags):\n{', '.join(new_info['tags'].split(','))}"
                     ]
                 )
 
@@ -138,7 +140,7 @@ def main():
 
             end_time = time.time()
             print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
-            insert_link(current_link)  # Mở lại khi cần lưu vào DB
+            # insert_link(current_link)  # Mở lại khi cần lưu vào DB
             # chờ cho đến khi file bị xoá thủ công để tiếp tục
             while os.path.exists(f"{path_folder}/result.mkv"):
                 print('Đợi xóa file result.mp4...')
@@ -155,7 +157,7 @@ def main():
                     time.sleep(5)
                     data += 5
             elif "Lỗi xảy ra, không có thông tin của content" in message:
-                insert_link(current_link)
+                # insert_link(current_link)
                 print(f"Lỗi xảy ra, không có thông tin của content")
             else:
                 print(f"[LỖI KHÁC] {message}")
