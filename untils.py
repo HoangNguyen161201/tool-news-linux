@@ -383,6 +383,7 @@ def generate_content_improved(content, title, gemini_key = gemini_keys[0]):
 
         Yêu cầu:
         - độ dài ký tự bằng hoặc trên {content.__len__()} ký tự.
+        - không được viết giống, tránh đạo văn.
         - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
         - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
         - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
