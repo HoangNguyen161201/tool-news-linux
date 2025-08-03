@@ -44,7 +44,7 @@ def main():
             time.sleep(1200)
         else: 
             print('chưa tạo video mới')
-            time.sleep(5)
+            time.sleep(20)
 
 
 if __name__ == "__main__":

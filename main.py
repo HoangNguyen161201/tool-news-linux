@@ -3,6 +3,7 @@ import os
 from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
 from untils import concat_content_videos, get_img_gif_person, generate_image, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
+from untils import get_func_Website_to_create
 from db import check_link_exists, insert_link
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -39,13 +40,13 @@ def main():
             os.makedirs(path_folder)
 
             # lấy tất cả link tin tức
-            link_news = get_all_link_in_theguardian_new()
+            website = get_func_Website_to_create()
+            link_news = website['get_links']()
 
             # kiểm tra link nào chưa xử lý
             for link in link_news:
-                full_link = f'https://www.theguardian.com{link}'
-                if not check_link_exists(full_link):
-                    current_link = full_link
+                if not check_link_exists(link):
+                    current_link = link
                     break
 
             print(current_link)
@@ -53,7 +54,7 @@ def main():
                 raise Exception("Lỗi xảy ra, không tồn tại link hoặc đã hết tin tức")
 
             # lấy thông tin tin tức
-            new_info = get_info_new(current_link)
+            new_info = website['get_info'](current_link)
             if new_info is None:
                 raise Exception("Lỗi xảy ra, không có thông tin của content")
 
@@ -140,7 +141,7 @@ def main():
 
             end_time = time.time()
             print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
-            insert_link(current_link)  # Mở lại khi cần lưu vào DB
+            # insert_link(current_link)  # Mở lại khi cần lưu vào DB
             # chờ cho đến khi file bị xoá thủ công để tiếp tục
             while os.path.exists(f"{path_folder}/result.mkv"):
                 print('Đợi xóa file result.mp4...')
@@ -157,7 +158,7 @@ def main():
                     time.sleep(5)
                     data += 5
             elif "Lỗi xảy ra, không có thông tin của content" in message:
-                insert_link(current_link)
+                # insert_link(current_link)
                 print(f"Lỗi xảy ra, không có thông tin của content")
             else:
                 print(f"[LỖI KHÁC] {message}")

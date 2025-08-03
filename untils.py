@@ -29,7 +29,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pyperclip
 from data import data_support
+from db import get_webiste
+from datetime import datetime, timedelta
 
+# get link in news website -------------------------------------------------------------------------------------
+# theguardian---
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
     headers = {
@@ -43,10 +47,10 @@ def get_all_link_in_theguardian_new():
     for a in soup.find_all('a', href=True):
         data_link = a.get('data-link-name', '')
         if 'card-@1' in data_link and 'live' not in data_link:
-            link.append(a['href'])
+            link.append(f'https://www.theguardian.com{a['href']}')
     return link
 
-def get_info_new(url):
+def get_info_new_theguardian(url):
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0'
@@ -91,7 +95,97 @@ def get_info_new(url):
         }
     except:
       return None
+# aljazeera---
+def get_all_link_in_aljazeera_new():
+    url = 'https://www.aljazeera.com/news/'
+    headers = {
+        'User-Agent': 'Mozilla/5.0'
+    }
 
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    link = []
+    # Lọc các thẻ <a> thỏa điều kiện
+    for a in soup.find_all('a', href=True):
+        classes = a.get('class', [])
+        if all(cls in classes for cls in ['u-clickable-card__link', 'article-card__link']):
+            link.append(f'https://www.aljazeera.com{a['href']}')
+    return link
+def get_info_new_aljazeera(url):
+    print(url)
+    time.sleep(100000)
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0'
+        }
+
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        print(soup)
+        time.sleep(10000)
+
+        # title, description and content
+        title = None
+        meta_tag = soup.find('meta', attrs={'property': 'og:title'})
+        if meta_tag:
+            title = meta_tag.get('content', None)
+
+        description = None
+        meta_tag = soup.find('meta', attrs={'name': 'description'})
+        if meta_tag:
+            description = meta_tag.get('content', None)
+
+        tags = None
+        meta_tag = soup.find('meta', attrs={'property': 'article:tag'})
+        if meta_tag:
+            tags = meta_tag.get('content', None)
+
+        content = soup.find('div', {'id': 'maincontent'}).get_text()
+
+        # pictures
+        pictures = soup.find_all('picture', class_='dcr-evn1e9')
+        picture_links = []
+        for item in pictures:
+            source = item.find(['source', 'img'], srcset = True)
+            picture_links.append(source['srcset'])
+        if(picture_links.__len__() == 0 or content is None or content is None or content is None or content is None):
+            return None
+        
+        return {
+            "content": content,
+            "title": title,
+            "description": description,
+            "tags": tags,
+            "picture_links": picture_links
+        }
+    except:
+      return None
+
+def get_func_Website_to_create():
+    data = [
+        {
+            "name": 'theguardian',
+            "get_links": get_all_link_in_theguardian_new,
+            "get_info": get_info_new_theguardian
+        },
+        # {
+        #     "name": 'aljazeera',
+        #     "get_links": get_all_link_in_aljazeera_new,
+        #     "get_info": get_info_new_aljazeera
+        # }
+    ]
+    website = None
+    for item in data:
+        data = get_webiste(item['name'])
+        # if data is None or data['timestamp'] < (datetime.now() - timedelta(minutes=20)):
+        if data is None or data['timestamp']:
+            website = item
+            break
+    return website
+        
+
+# ----------------------------- ------------------------------------------
 def get_img_gif_person():
     index_path = random.randint(0, 3)
     return {
@@ -452,7 +546,7 @@ def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0])
     response = model.generate_content(content)
     return response.text
 
-def generate_title_description_improved(title, description):
+def generate_title_description_improved(title, description, gemini_key = gemini_keys[0]):
     while True:
         title_des = generate_content(f'''tôi đang có các thông tin như sau:
                                     - title: {title}
@@ -461,30 +555,6 @@ def generate_title_description_improved(title, description):
                                     Trả ra dưới định dạng như sau:
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có các dấu ký hiệu đặt biệt trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
-                                    Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_keys[2]
-                        )
-        
-        lines = title_des.splitlines()
-        title_line = lines[0].strip()
-        if len(title_line) < 100:
-            desc = "\n".join(lines[1:]).strip()
-            desc = re.sub(r'[ \t]+', ' ', desc)
-            return {
-                "title": title_line,
-                "description": desc
-            }
-
-# tạo lại nội dung content
-def generate_title_description_improved(title, description, gemini_key = gemini_keys[0]):
-    while True:
-        title_des = generate_content(f'''tôi đang có các thông tin như sau:
-                                    - title: {title}
-                                    - description: {description}
-                                    hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
-                                    Trả ra dưới định dạng như sau:
-                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có dấu : trong title, và không có ghi là dòng 1 hay gì hết, ghi title mà bạn generate ra thôi).
-                                    Từ dòng thứ 2 trở đi: là description (không được ghi dòng 2 hay option 2, chỉ trả ra description mà bạn generate thôi). 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
                                     api_key= gemini_key
                         )
