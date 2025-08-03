@@ -1,6 +1,6 @@
 import shutil
 import os
-from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new, get_info_new
+from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new
 from untils import concat_content_videos, get_img_gif_person, generate_image, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
 from untils import get_func_Website_to_create
