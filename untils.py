@@ -478,7 +478,7 @@ def process_image_support(
 
     # Vẽ text
     try:
-        font = ImageFont.truetype("arial.ttf", 40)
+        font = ImageFont.truetype("./fonts/arial/arial.ttf", 40)
     except:
         font = ImageFont.load_default()
 
