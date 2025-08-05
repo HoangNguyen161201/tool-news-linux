@@ -105,31 +105,35 @@ def get_all_link_in_aljazeera_new():
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
     link = []
-    # Lọc các thẻ <a> thỏa điều kiện
-    for a in soup.find_all('a', href=True):
-        classes = a.get('class', [])
-        if all(cls in classes for cls in ['u-clickable-card__link', 'article-card__link']):
-            link.append(f'https://www.aljazeera.com{a['href']}')
+
+    for at in soup.find_all('article'):
+        classes = at.get('class', [])
+        if all(cls in classes for cls in ['article-card--reset']):
+            if at.find(class_='post-icon__text') or 'Live updates' in at.get_text():
+                continue
+            a_tag = at.find('a', href=True)
+            if a_tag:
+                link.append(f'https://www.aljazeera.com{a_tag['href']}')
     return link
 def get_info_new_aljazeera(url):
     print(url)
-    time.sleep(100000)
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0'
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get('https://www.aljazeera.com/news/2025/8/3/threats-and-intimidation-stalling-top-icc-prosecutors-israel-case-report', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
-
-        print(soup)
-        time.sleep(10000)
 
         # title, description and content
         title = None
-        meta_tag = soup.find('meta', attrs={'property': 'og:title'})
+        meta_tag = soup.select_one('meta[name="pageTitle"]')
         if meta_tag:
-            title = meta_tag.get('content', None)
+            title = meta_tag.get('content')
+
+        print(title)
+        print(soup)
+        time.sleep(10000)
 
         description = None
         meta_tag = soup.find('meta', attrs={'name': 'description'})
@@ -178,8 +182,7 @@ def get_func_Website_to_create():
     website = None
     for item in data:
         data = get_webiste(item['name'])
-        # if data is None or data['timestamp'] < (datetime.now() - timedelta(minutes=20)):
-        if data is None or data['timestamp']:
+        if data is None or data['timestamp'] < (datetime.now() - timedelta(minutes=20)):
             website = item
             break
     return website
@@ -540,7 +543,7 @@ def generate_image_and_video_aff_and_get_three_item_amazon():
         return None
 
 
-def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0]):
+def generate_content(content, model='gemini-2.0-flash-lite', api_key= gemini_keys[0]):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model)
     response = model.generate_content(content)
