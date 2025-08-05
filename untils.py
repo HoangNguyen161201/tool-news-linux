@@ -173,16 +173,17 @@ def get_func_Website_to_create():
             "get_links": get_all_link_in_theguardian_new,
             "get_info": get_info_new_theguardian
         },
-        {
-            "name": 'aljazeera',
-            "get_links": get_all_link_in_aljazeera_new,
-            "get_info": get_info_new_aljazeera
-        }
+        # {
+        #     "name": 'aljazeera',
+        #     "get_links": get_all_link_in_aljazeera_new,
+        #     "get_info": get_info_new_aljazeera
+        # }
     ]
     website = None
     for item in data:
         data = get_webiste(item['name'])
-        if data is None or data['timestamp'] < (datetime.now() - timedelta(minutes=20)):
+        if True:
+        # if data is None or data['timestamp'] < (datetime.now() - timedelta(minutes=20)):
             website = item
             break
     return website
