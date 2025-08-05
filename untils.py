@@ -173,11 +173,11 @@ def get_func_Website_to_create():
             "get_links": get_all_link_in_theguardian_new,
             "get_info": get_info_new_theguardian
         },
-        # {
-        #     "name": 'aljazeera',
-        #     "get_links": get_all_link_in_aljazeera_new,
-        #     "get_info": get_info_new_aljazeera
-        # }
+        {
+            "name": 'aljazeera',
+            "get_links": get_all_link_in_aljazeera_new,
+            "get_info": get_info_new_aljazeera
+        }
     ]
     website = None
     for item in data:
