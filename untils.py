@@ -1314,3 +1314,91 @@ def check_file_exists_on_vps(host, username, password, remote_path, port=22):
         print(f"⚠️ Lỗi kiểm tra file: {e}")
         return False
     
+
+# def generate_thumbnail(img_path, img_blur_path, img_person_path, draf_path, out_path, text):
+#     text = text.upper()
+#     # Mở ảnh thứ nhất (ảnh nền chính)
+#     background = Image.open(img_path)
+#     bg_w, bg_h = background.size
+#     percent = ((1920 - 60) / bg_w) if ((1920 - 60) / bg_w) * bg_h < 1020 else (1020 / bg_h)
+#     background = background.resize((int(bg_w * percent),int(bg_h * percent)))
+
+#     # Mở ảnh thứ hai (ảnh nền phụ) và thay đổi kích thước
+#     background_2 = Image.open(img_blur_path)
+#     background_2 = background_2.resize((1920, 1080))
+
+#     # Mở ảnh overlay (PNG trong suốt)
+#     overlay = Image.open(img_person_path)
+#     overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
+#     overlay2 = Image.open('./public/bar.png')
+
+#     # Đảm bảo ảnh overlay có kênh alpha
+#     if overlay.mode != 'RGBA':
+#         overlay = overlay.convert('RGBA')
+
+#     # Tính toán vị trí để đặt ảnh nền chính vào giữa ảnh nền phụ
+#     bg2_w, bg2_h = background_2.size
+#     x = (bg2_w - int(bg_w * percent)) // 2
+#     y = (bg2_h - int(bg_h * percent)) // 2
+
+#     # Dán ảnh nền chính vào giữa ảnh nền phụ
+#     background_2.paste(background, (x, y))
+
+#     # Dán ảnh overlay lên ảnh nền chính
+#     background_2.paste(overlay, (0, 250), overlay)
+#     background_2.paste(overlay2, (0, 0), overlay2)
+    
+#        # Thêm văn bản vào ảnh
+#     draw = ImageDraw.Draw(background_2)
+#     font = ImageFont.truetype("./fonts/arial/arial.ttf", 55)  # Đặt font và kích thước font
+#     max_width = 1350
+#     lines = []
+
+#     # Tách văn bản thành các dòng có độ dài tối đa là 1000 pixel
+#     words = text.split()
+#     current_line = []
+
+#     for word in words:
+#         test_line = ' '.join(current_line + [word])
+#         bbox = draw.textbbox((0, 0), test_line, font=font)
+#         test_width = bbox[2] - bbox[0]
+#         if test_width <= max_width:
+#             current_line.append(word)
+#         else:
+#             lines.append(' '.join(current_line))
+#             current_line = [word]
+
+#     if current_line:
+#         lines.append(' '.join(current_line))
+
+#     # Tính tổng chiều cao của tất cả các dòng văn bản
+#     total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines) + (len(lines) - 1) * 5
+
+#     # Tính toán vị trí y ban đầu để căn giữa theo chiều dọc
+#     box_height = 380
+#     y_text_start = bg2_h - box_height + (box_height - total_text_height) // 2
+
+#     # Vẽ các dòng văn bản vào ảnh
+#     x_text = 480  # Khoảng cách từ trái sang
+#     y_text = y_text_start
+
+#     for line in lines:  # Vẽ từ trên xuống dưới
+#         bbox = draw.textbbox((0, 0), line, font=font)
+#         line_height = bbox[3] - bbox[1]
+#         # Vẽ văn bản nhiều lần để làm đậm chữ
+#         for offset in [
+#     (0, 0), (1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1),
+#     (2, 0), (0, 2), (2, 2), (-2, 0), (0, -2), (-2, -2), (2, -2), (-2, 2)
+# ]:
+#             draw.text((x_text + offset[0], y_text + offset[1]), line, font=font, fill="white")
+#         y_text += int(line_height * 1.8)
+
+#     # Lưu ảnh draf 
+#     background_2.save(draf_path)
+
+#     # lưu ảnh với bg 
+#     jpg_image = Image.open(draf_path)  
+#     png_image = Image.open('./public/bg/bg-1.png')
+#     png_image = png_image.convert("RGBA")
+#     jpg_image.paste(png_image, (0, 0), png_image)
+#     jpg_image.save(out_path)
