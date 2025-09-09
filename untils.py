@@ -33,6 +33,70 @@ from db import get_webiste
 from datetime import datetime, timedelta
 
 # get link in news website -------------------------------------------------------------------------------------
+# kenh14 star---
+def get_all_link_in_kenh14_star_new():
+    url = 'https://kenh14.vn/star.chn'
+    headers = {
+        'User-Agent': 'Mozilla/5.0'
+    }
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    link = []
+    
+
+    # Lọc các thẻ <a> thỏa điều kiện
+    for a in soup.find_all('a', href=True, class_='ktncli-ava'):
+        link.append(f'https://kenh14.vn{a['href']}')
+    
+    return link
+
+def get_info_new_kenh14_star(url):
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0'
+        }
+
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # title, description and content
+        title = None
+        meta_tag = soup.find('meta', attrs={'property': 'og:title'})
+        if meta_tag:
+            title = meta_tag.get('content', None)
+
+        description = None
+        meta_tag = soup.find('meta', attrs={'name': 'description'})
+        if meta_tag:
+            description = meta_tag.get('content', None)
+            
+
+        tags = None
+        meta_tag = soup.find('meta', attrs={'name': 'keywords'})
+        if meta_tag:
+            tags = meta_tag.get('content', None)
+            
+
+        content = soup.find('div', {'class': 'detail-content'}).get_text(strip=True)
+
+        
+        # pictures
+        pictures = soup.find_all('img', attrs={'type': 'photo'})
+        picture_links = [img['src'] for img in pictures if img.has_attr('src')]
+
+        if len(picture_links) == 0 or content is None:
+            return None
+        
+        return {
+            "content": content,
+            "title": title,
+            "description": description,
+            "tags": tags,
+            "picture_links": picture_links
+        }
+    except:
+      return None
 # theguardian---
 def get_all_link_in_theguardian_new():
     url = 'https://www.theguardian.com/world'
@@ -169,10 +233,15 @@ def get_info_new_aljazeera(url):
 def get_func_Website_to_create():
     data = [
         {
-            "name": 'theguardian',
-            "get_links": get_all_link_in_theguardian_new,
-            "get_info": get_info_new_theguardian
+            "name": 'kenh14.vn-star',
+            "get_links": get_all_link_in_kenh14_star_new,
+            "get_info": get_info_new_kenh14_star
         },
+        # {
+        #     "name": 'theguardian',
+        #     "get_links": get_all_link_in_theguardian_new,
+        #     "get_info": get_info_new_theguardian
+        # },
         # {
         #     "name": 'aljazeera',
         #     "get_links": get_all_link_in_aljazeera_new,
@@ -244,6 +313,8 @@ def generate_video_by_image( in_path, out_path, second, is_set_avatar = True):
     width, height = 1920, 1080
     duration = second
     os.makedirs('./temp', exist_ok=True)
+    
+    print('nguyen quang hoang')
 
     cmd = [
         "ffmpeg",
@@ -544,7 +615,7 @@ def generate_image_and_video_aff_and_get_three_item_amazon():
         return None
 
 
-def generate_content(content, model='gemini-2.0-flash-lite', api_key= gemini_keys[0]):
+def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0]):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model)
     response = model.generate_content(content)
@@ -576,7 +647,7 @@ def generate_title_description_improved(title, description, gemini_key = gemini_
 # tạo lại nội dung content
 def generate_content_improved(content, title, gemini_key = gemini_keys[0]):
     return generate_content(f'''
-        Tôi có một bản tin mới. Hãy viết lại bằng tiếng Anh sao cho hấp dẫn, súc tích và phù hợp để đọc lên trong một video tin tức trên YouTube (voice-over). Nội dung cần được viết dưới dạng khách quan ở ngôi thứ ba, không dùng "I", "my", "we", hay bất kỳ đại từ ngôi thứ nhất nào.
+        Tôi có một bản tin mới. Hãy viết lại bằng tiếng việt sao cho hấp dẫn, súc tích và phù hợp để đọc lên trong một video tin tức trên YouTube (voice-over). Nội dung cần được viết dưới dạng khách quan ở ngôi thứ ba, không dùng tôi, của tôi, chúng ta, hay bất kỳ đại từ ngôi thứ nhất nào.
         title là: {title},
         Nội dung là: {content}
 
@@ -780,7 +851,8 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
     # cắt đúng duration và gắn âm thanh
     import_audio_to_video(draf_out_path, draf_out_path_2, audio_out_path, audio_duration)
     normalize_video(draf_out_path_2, draf_out_path_3)
-    normalize_video(short_link_path, short_link_out_path)
+    if short_link_path is not None:
+        normalize_video(short_link_path, short_link_out_path)
 
 
     # nối intro với video

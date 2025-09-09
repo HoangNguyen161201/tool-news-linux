@@ -7,7 +7,8 @@ from untils import get_func_Website_to_create
 from db import check_link_exists, insert_link
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
-from slugify import slugify
+# from slugify import slugify
+from django.utils.text import slugify
 import time
 from data import gemini_keys
 
@@ -63,24 +64,25 @@ def main():
             
             path_videos = []
             products = None
-
+            
             # chạy song song các task: xử lý title/desc, content, ảnh aff, video từng ảnh
             with ThreadPoolExecutor(max_workers=6) as executor:
                 future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'], gemini_keys[gemini_key_index])
                 future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'], gemini_keys[gemini_key_index])
                 # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
-                future3 = executor.submit(generate_image_and_video_aff_and_get_three_item_amazon)
+                # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item_amazon)
                 
                 future_videos = [
                     executor.submit(create_video_by_image, path_folder, key, link)
                     for key, link in enumerate(new_info['picture_links'])
                 ]
 
-                wait([future1, future2, future3] + future_videos)
+                # wait([future1, future2, future3] + future_videos)
+                wait([future1, future2] + future_videos )
 
                 result1 = future1.result()
                 result2 = future2.result()
-                products = future3.result()
+                # products = future3.result()
 
                 for fut in future_videos:
                     path_videos.append(fut.result())
@@ -91,10 +93,9 @@ def main():
                 new_info['content'] = result2
                 new_info['title_slug'] = slugify(new_info['title'])
 
-            if products is None:
-                raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
+            # if products is None:
+            #     raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
 
-            print(new_info)
             # tạo thumbnail, voice, file txt — vẫn song song nhưng nhẹ hơn
             with ThreadPoolExecutor(max_workers=3) as executor:
                 future1 = executor.submit(
@@ -109,7 +110,8 @@ def main():
                 future2 = executor.submit(
                     generate_to_voice_edge,
                     new_info['content'],
-                    f"{path_folder}/content-voice.aac"
+                    f"{path_folder}/content-voice.aac",
+                    'vi-VN-HoaiMyNeural'
                 )
 
                 future3 = executor.submit(
@@ -127,9 +129,24 @@ def main():
                 future3.result()
 
             # nối video final
+            # concat_content_videos(
+            #     './public/intro.mkv',
+            #     './pic_affs/aff.mkv',
+            #     f"{path_folder}/aff.mkv",
+            #     f"{path_folder}/content-voice.aac",
+            #     path_videos,
+            #     f"{path_folder}/result.mkv",
+            #     f"{path_folder}/draf.mkv",
+            #     f"{path_folder}/draf2.mkv",
+            #     f"{path_folder}/draf3.mkv",
+            # )
+            
+            print(new_info)
+            time.sleep(1000)
             concat_content_videos(
                 './public/intro.mkv',
-                './pic_affs/aff.mkv',
+                # './pic_affs/aff.mkv',
+                None,
                 f"{path_folder}/aff.mkv",
                 f"{path_folder}/content-voice.aac",
                 path_videos,

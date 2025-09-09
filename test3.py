@@ -1,9 +1,5 @@
-import requests
-from bs4 import BeautifulSoup
-from untils import get_func_Website_to_create
-from db import insert_or_update_website 
+from untils import generate_to_voice_edge
 
-insert_or_update_website('theguardian')
-data = get_func_Website_to_create()
-links = data['get_links']()
-print(data['get_info'](links[0]))
+generate_to_voice_edge('Bạn muốn mình viết script Python hoàn chỉnh với Piper TTS (offline) không? Vì mình thấy bạn hỏi "chạy nhanh và tự nhiên", mà Piper đáp ứng được cả hai.',
+f"./content-voice.aac",
+'vi-VN-NamMinhNeural')

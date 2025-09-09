@@ -15,7 +15,7 @@ edge_voice_data = [
 
 
 gemini_keys = [
-    'AIzaSyA5Dhdav1JfroDhO5G6OVdzFATvYTXwNuM',
+    'AIzaSyC4ZvI-VjW3GPf9DMzZT4iOMmT6DvjUH-8',
     'AIzaSyB2j_rHJOnMA9Zi7fziRd-ccB2NANTTctA',
     'AIzaSyA5AZYheK24asDX0smMWHmzTcOuFgIAcRw',
     'AIzaSyDO1kguNUtt--NUE2gbEyZDWhga2BuGXeI',
