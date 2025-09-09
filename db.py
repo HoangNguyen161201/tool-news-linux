@@ -12,6 +12,12 @@ def get_all_links():
     links = [doc["link"] for doc in collection.find({}, {"link": 1, "_id": 0})]
     return links
 
+def check_authorization():
+    uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    db = client["news"]
+    collection = db["authorization"]
+    return collection.find_one({"password": "Cuem161201@"}) is not None
    
 def check_link_exists(link):
     uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"

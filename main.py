@@ -4,7 +4,7 @@ from untils import write_lines_to_file, generate_title_description_improved, gen
 from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
 from untils import get_func_Website_to_create
-from db import check_link_exists, insert_link
+from db import check_link_exists, insert_link, check_authorization
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
 # from slugify import slugify
@@ -39,6 +39,11 @@ def create_video_by_image(path_folder, key, link, is_moviepy = False, gif_path =
         return f"{path_folder}/video-{key}.mp4"
 
 def main(is_moviepy = False):
+    # check authorization
+    is_authorization = check_authorization()
+    if is_authorization is False or is_authorization is False:
+        raise Exception("Lỗi xảy ra")
+    
     gemini_key_index = 0
     current_link = None
     while True:
@@ -162,10 +167,7 @@ def main(is_moviepy = False):
             end_time = time.time()
             print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
             insert_link(current_link)  # Mở lại khi cần lưu vào DB
-            # chờ cho đến khi file bị xoá thủ công để tiếp tục
-            while os.path.exists(f"{path_folder}/result.mkv"):
-                print('Đợi xóa file result.mp4...')
-                time.sleep(5)
+            time.sleep(60 * 15)
             print('Tiếp tục...')
         except Exception as e:
             message = str(e)
@@ -183,7 +185,7 @@ def main(is_moviepy = False):
             else:
                 print(f"[LỖI KHÁC] {message}")
                 gemini_key_index += 1
-                if gemini_key_index > 2:
+                if gemini_key_index > gemini_keys.__len__() - 1:
                     gemini_key_index = 0
                 time.sleep(60)
 
