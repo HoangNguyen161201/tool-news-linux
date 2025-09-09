@@ -1,7 +1,7 @@
 import shutil
 import os
-from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image, get_all_link_in_theguardian_new
-from untils import concat_content_videos, get_img_gif_person, generate_image, generate_content_improved
+from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
+from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
 from untils import get_func_Website_to_create
 from db import check_link_exists, insert_link
@@ -12,19 +12,33 @@ from django.utils.text import slugify
 import time
 from data import gemini_keys
 
-def create_video_by_image(path_folder, key, link):
+def create_video_by_image(path_folder, key, link, is_moviepy = False, gif_path = None):
     img_path = f"{path_folder}/image-{key}.jpg"
     img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
-    generate_image(link, img_path, img_blur_path)
-    random_number = random.randint(5, 10)
-    generate_video_by_image(
-        img_path,
-        f'{path_folder}/video-{key}.mkv',
-        random_number
-    )
-    return f"{path_folder}/video-{key}.mkv"
+    
+    if is_moviepy is False:    
+        generate_image_ffmpeg(link, img_path, img_blur_path)
+        random_number = random.randint(5, 10)
+        generate_video_by_image_ffmpeg(
+            img_path,
+            f'{path_folder}/video-{key}.mkv',
+            random_number
+        )
+        return f"{path_folder}/video-{key}.mkv"
+    else:
+        generate_image_moviepy(link, img_path, img_blur_path)
+        random_number = random.randint(5, 10)
+        generate_video_by_image_moviepy(
+            1 if key % 2 == 0 else None,
+            img_path,
+            img_blur_path,
+            f'{path_folder}/video-{key}.mp4',
+            random_number,
+            gif_path
+        )
+        return f"{path_folder}/video-{key}.mp4"
 
-def main():
+def main(is_moviepy = False):
     gemini_key_index = 0
     current_link = None
     while True:
@@ -73,7 +87,7 @@ def main():
                 # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item_amazon)
                 
                 future_videos = [
-                    executor.submit(create_video_by_image, path_folder, key, link)
+                    executor.submit(create_video_by_image, path_folder, key, link, is_moviepy, person_info['person_gif_path'])
                     for key, link in enumerate(new_info['picture_links'])
                 ]
 
@@ -92,6 +106,7 @@ def main():
                 new_info['description'] = result1['description']
                 new_info['content'] = result2
                 new_info['title_slug'] = slugify(new_info['title'])
+                
 
             # if products is None:
             #     raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
@@ -128,33 +143,21 @@ def main():
                 future2.result()
                 future3.result()
 
-            # nối video final
-            # concat_content_videos(
-            #     './public/intro.mkv',
-            #     './pic_affs/aff.mkv',
-            #     f"{path_folder}/aff.mkv",
-            #     f"{path_folder}/content-voice.aac",
-            #     path_videos,
-            #     f"{path_folder}/result.mkv",
-            #     f"{path_folder}/draf.mkv",
-            #     f"{path_folder}/draf2.mkv",
-            #     f"{path_folder}/draf3.mkv",
-            # )
-            
-            print(new_info)
-            time.sleep(1000)
-            concat_content_videos(
-                './public/intro.mkv',
-                # './pic_affs/aff.mkv',
-                None,
-                f"{path_folder}/aff.mkv",
-                f"{path_folder}/content-voice.aac",
-                path_videos,
-                f"{path_folder}/result.mkv",
-                f"{path_folder}/draf.mkv",
-                f"{path_folder}/draf2.mkv",
-                f"{path_folder}/draf3.mkv",
-            )
+            if is_moviepy is False:
+                concat_content_videos_ffmpeg(
+                    './public/intro.mkv',
+                    # './pic_affs/aff.mkv',
+                    None,
+                    f"{path_folder}/aff.mkv",
+                    f"{path_folder}/content-voice.aac",
+                    path_videos,
+                    f"{path_folder}/result.mkv",
+                    f"{path_folder}/draf.mkv",
+                    f"{path_folder}/draf2.mkv",
+                    f"{path_folder}/draf3.mkv",
+                )
+            else:
+                concat_content_videos_moviepy(f"{path_folder}/content-voice.aac", path_videos, f"{path_folder}/result.mp4")
 
             end_time = time.time()
             print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
@@ -185,4 +188,4 @@ def main():
                 time.sleep(60)
 
 if __name__ == "__main__":
-    main()
+    main(True)

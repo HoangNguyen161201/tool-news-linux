@@ -31,6 +31,8 @@ import pyperclip
 from data import data_support
 from db import get_webiste
 from datetime import datetime, timedelta
+from moviepy import ImageClip, VideoFileClip, concatenate_videoclips, CompositeVideoClip, AudioFileClip, TextClip, concatenate_audioclips
+import numpy as np
 
 # get link in news website -------------------------------------------------------------------------------------
 # kenh14 star---
@@ -266,7 +268,8 @@ def get_img_gif_person():
         'person_gif_path': gif_paths[index_path]    
     } 
 
-def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
+# create video by image with ffmpeg----------------------------------------------
+def generate_image_ffmpeg(link, out_path, out_blur_path, width=1920, height=1080):
     def resize_to_fit(image, max_width, max_height):
         h, w = image.shape[:2]
         scale = min(max_width / w, max_height / h)
@@ -308,8 +311,7 @@ def generate_image(link, out_path, out_blur_path, width=1920, height=1080):
     cv2.imwrite(out_path, combined)
     cv2.imwrite(out_blur_path, blurred)
 
-
-def generate_video_by_image( in_path, out_path, second, is_set_avatar = True):
+def generate_video_by_image_ffmpeg( in_path, out_path, second, is_set_avatar = True):
     width, height = 1920, 1080
     duration = second
     os.makedirs('./temp', exist_ok=True)
@@ -364,6 +366,116 @@ def generate_video_by_image( in_path, out_path, second, is_set_avatar = True):
     process.wait()
     if process.returncode != 0:
         raise Exception("FFmpeg failed")
+
+
+# create video by image with moviepy-------------------------------------------------------------
+
+def resize_to_cover(image, target_width, target_height):
+    # Get the original dimensions
+    original_height, original_width = image.shape[:2]
+    
+    # Calculate the aspect ratios
+    target_aspect = target_width / target_height
+    original_aspect = original_width / original_height
+    
+    # Determine the scaling factor and dimensions to cover the target area
+    if original_aspect > target_aspect:
+        # Image is wider than target, scale by height
+        scale = target_height / original_height
+    else:
+        # Image is taller than target, scale by width
+        scale = target_width / original_width
+    
+    # Resize the image
+    new_width = int(original_width * scale)
+    new_height = int(original_height * scale)
+    resized_image = cv2.resize(image, (new_width, new_height))
+    
+    # Calculate the cropping coordinates
+    x_center = new_width // 2
+    y_center = new_height // 2
+    x_crop = target_width // 2
+    y_crop = target_height // 2
+    
+    # Crop the image to the target dimensions
+    cropped_image = resized_image[y_center - y_crop:y_center + y_crop, x_center - x_crop:x_center + x_crop]
+    
+    return cropped_image
+
+def generate_image_moviepy(link, out_path, out_blur_path, width = None, height = None):
+    response = requests.get(link)
+    if response.status_code == 200:
+        with open(out_path, "wb") as f:
+            f.write(response.content)
+    else:
+        print("Yêu cầu không thành công. Mã trạng thái:", response.status_code)
+
+    image = cv2.imread(out_path)
+    image = image[150:-150, 150:-150]
+    blurred_image_edit = None
+    if width is not None and height is not None:
+        blurred_image_edit  = resize_to_cover(image, width, height)
+    else:
+        image = cv2.flip(image, 1)
+    border_thickness = 25
+    border_color = (255, 255, 255)
+    blurred_image_edit_2 = cv2.copyMakeBorder(blurred_image_edit if blurred_image_edit is not None else image, border_thickness, border_thickness, border_thickness, border_thickness, cv2.BORDER_CONSTANT, value=border_color)
+    image = cv2.copyMakeBorder(image, border_thickness, border_thickness, border_thickness, border_thickness, cv2.BORDER_CONSTANT, value=border_color)
+
+    # Làm mờ hình ảnh bằng Blur
+    blurred_image = cv2.GaussianBlur(blurred_image_edit_2, (0, 0), 15)
+
+    cv2.imwrite(out_path, image)
+    cv2.imwrite(out_blur_path, blurred_image)
+
+
+def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, second, gif_path, is_short = False):
+    clip_image = ImageClip(in_path).with_duration(second)
+    clip_blurred_image = ImageClip(blur_in_path, duration= second).resized((1080, 1920) if is_short else (1920, 1080))
+    clip_blurred_image = clip_blurred_image.resized(lambda t: 1 + 0.3 * t/second)
+
+    if not zoom_in:
+        w_clip_image, h_clip_image = clip_image.size
+        percent = (960 / w_clip_image) if (960 / w_clip_image) * h_clip_image < 720 else (720 / h_clip_image)
+        if is_short:
+            percent = (720 / w_clip_image) if (720 / w_clip_image) * h_clip_image < 960 else (960 / h_clip_image)
+        clip_image = clip_image.resized((percent * w_clip_image, percent * h_clip_image))
+        clip_image = clip_image.resized(lambda t: 1 + 0.4 * t/second)
+    else:
+        w_clip_image, h_clip_image = clip_image.size
+        percent = ((1920 - 60) / w_clip_image) if ((1920 - 60) / w_clip_image) * h_clip_image < 1020 else (1020 / h_clip_image)
+        if is_short:
+            percent = (1020 / w_clip_image) if (1020 / w_clip_image) * h_clip_image < (1920 - 60) else ((1920 - 60) / h_clip_image)
+        clip_image = clip_image.resized((percent * w_clip_image, percent * h_clip_image))
+        clip_image = clip_image.resized(lambda t: 1 - 0.3 * t/second)
+    
+    # add gif
+    gif = VideoFileClip(gif_path, has_mask= True)
+    percent_gif = 0.8 
+    gif = gif.resized((int(1920 * percent_gif), int(1080 * percent_gif)))
+    while gif.duration < second:
+        gif = concatenate_videoclips([gif, gif])
+    gif = gif.subclipped(0, second)
+
+    
+    # Tạo avatar clip
+    avatar_clip = ImageClip('./public/avatar.png').resized((200, 200))
+    avatar_clip = avatar_clip.with_opacity(0.7)
+    avatar_clip = avatar_clip.with_position((830 if is_short else 1650,  50))
+
+    final_clip = CompositeVideoClip([
+        clip_blurred_image.with_position('center'),
+        clip_image.with_position('center'),
+        gif.with_position((0, 1080 if is_short else 250)),
+        avatar_clip.with_duration(second)
+        ])
+
+    final_clip.write_videofile(out_path, fps=24)
+    
+    
+
+
+# -------------------------------------------------------------------------------------
 
 def download_and_resize_image(url, size=(399, 399), save_path='output.jpg'):
     try:
@@ -479,7 +591,7 @@ def generate_image_and_video_aff_and_get_three_item():
         background.save(f'{path_folder}/pic_result.png')
         audio_duration = get_media_duration('./public/aff.aac')
 
-        generate_video_by_image(
+        generate_video_by_image_ffmpeg(
                         f'{path_folder}/pic_result.png',
                         f'{path_folder}/daft.mkv',
                         audio_duration
@@ -600,7 +712,7 @@ def generate_image_and_video_aff_and_get_three_item_amazon():
         # Lưu kết quả
         background.save("./pic_affs/drag.png")
         audio_duration = get_media_duration('./public/aff.aac')
-        generate_video_by_image(
+        generate_video_by_image_ffmpeg(
                         f'./pic_affs/drag.png',
                         f'./pic_affs/daft.mkv',
                         audio_duration,
@@ -802,7 +914,8 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
 
     asyncio.run(_run())
 
-def concat_content_videos(intro_path, short_link_path, short_link_out_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
+# concat video by ffmpeg ----------------------------------------------
+def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
     # Load âm thanh
     audio_duration = get_media_duration(audio_out_path)
     duration_video = 0
@@ -876,6 +989,52 @@ def concat_content_videos(intro_path, short_link_path, short_link_out_path, audi
     subprocess.run(command)
     os.remove(list_file)
 
+# concat video by moviepy ------------------------------------------------
+def concat_content_videos_moviepy(audio_path, video_path_list, out_path):
+    # Load âm thanh
+    audio = AudioFileClip(audio_path)
+    audio_duration = audio.duration
+
+    # intro video
+    intro = VideoFileClip('./public/intro.mp4')
+    intro_audio = AudioFileClip('./public/intro.mp4')
+    intro = intro.resized((1920, 1080))
+    intro_duration =  intro.duration
+    final_duration = audio_duration + intro_duration
+
+    duration_video = 0
+    index = 0
+    videos = [intro]
+
+    bg_mobile_img = Image.open('./public/bg/bg-mobile-1.png').convert("RGBA")
+    bg_mobile_array = np.array(bg_mobile_img)
+    bg_mobile = ImageClip(bg_mobile_array, duration= 5, is_mask = False, transparent = True)  # Không cố định thời gian ở đây
+    bg_mobile = bg_mobile.with_position((0, -700))
+ 
+    bg_mobile = bg_mobile.with_duration(intro.duration)
+
+    while duration_video < final_duration:
+        video = VideoFileClip(video_path_list[index])
+        if(duration_video + video.duration > final_duration):
+            duration_end_video =  duration_video + video.duration - final_duration
+            video = video.subclipped(0, duration_end_video)
+            duration_video += duration_end_video
+        else:
+            duration_video += video.duration
+        videos.append(video)
+        if(index + 1 == video_path_list.__len__()):
+            index = 0
+        else:
+            index += 1
+
+    # Nối video lại với nhau
+    final_video = concatenate_videoclips(videos).subclipped(0, final_duration)
+    # Ghép video và âm thanh lại với nhau
+    final_video = final_video.with_audio(concatenate_audioclips([intro_audio, audio]))
+    final_video.write_videofile(out_path)
+    final_video.close()
+
+# -------------------------------------------------------------------
 
 def normalize_video(input_path, output_path):
     command = [
