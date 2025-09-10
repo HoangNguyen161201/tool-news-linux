@@ -269,7 +269,7 @@ def get_img_gif_person():
     } 
 
 # create video by image with ffmpeg----------------------------------------------
-def generate_image_ffmpeg(link, out_path, out_blur_path, width=1920, height=1080):
+def generate_image_ffmpeg(link, out_path, out_blur_path, width=1920, height=1080, crop=150):
     def resize_to_fit(image, max_width, max_height):
         h, w = image.shape[:2]
         scale = min(max_width / w, max_height / h)
@@ -284,7 +284,7 @@ def generate_image_ffmpeg(link, out_path, out_blur_path, width=1920, height=1080
         f.write(response.content)
 
     image = cv2.imread(out_path)
-    image = image[150:-150, 150:-150]
+    image = image[crop:-crop, crop:-crop]
 
     # === ẢNH BLUR ===
     blurred = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
@@ -367,9 +367,108 @@ def generate_video_by_image_ffmpeg( in_path, out_path, second, is_set_avatar = T
     if process.returncode != 0:
         raise Exception("FFmpeg failed")
 
+# create video by image with cv2----------------------------------------------
+def generate_image_cv2(link, out_path, out_blur_path, width=None, height=None, crop=150):
+    print(link)
+    import requests
+
+    response = requests.get(link)
+    if response.status_code == 200:
+        with open(out_path, "wb") as f:
+            f.write(response.content)
+    else:
+        print("Yêu cầu không thành công. Mã trạng thái:", response.status_code)
+        return
+
+    image = cv2.imread(out_path)
+    h, w, _ = image.shape
+    max_w = width - 100
+    max_h = height - 100
+    scale = min(max_w / w, max_h / h)
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+    image= cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+    image = image[crop:-crop, crop:-crop]  # crop trung tâm
+
+    blurred_image_edit = None
+    if width is not None and height is not None:
+        # Resize dãn ra luôn
+        blurred_image_edit = cv2.resize(image, (width, height), interpolation=cv2.INTER_LINEAR)
+    else:
+        image = cv2.flip(image, 1)
+
+    border_thickness = 25
+    border_color = (255, 255, 255)
+    blurred_image_edit_2 = cv2.copyMakeBorder(
+        blurred_image_edit if blurred_image_edit is not None else image,
+        border_thickness, border_thickness,
+        border_thickness, border_thickness,
+        cv2.BORDER_CONSTANT, value=border_color
+    )
+    image = cv2.copyMakeBorder(
+        image,
+        border_thickness, border_thickness,
+        border_thickness, border_thickness,
+        cv2.BORDER_CONSTANT, value=border_color
+    )
+
+    # Làm mờ hình ảnh
+    blurred_image = cv2.GaussianBlur(blurred_image_edit_2, (0, 0), 15)
+
+    cv2.imwrite(out_path, image)
+    cv2.imwrite(out_blur_path, blurred_image)
+    
+
+def create_video_with_zoom_opencv(image_path, output_path, duration=5, zoom_factor=1.25, fps=24, zoom_in=True):
+    image = cv2.imread(image_path)
+    h, w, _ = image.shape
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # hoặc 'mp4v'
+    out = cv2.VideoWriter(output_path, fourcc, fps, (w, h))
+    total_frames = duration * fps
+    
+    cx, cy = w / 2, h / 2  # tâm ảnh
+    
+    for i in range(total_frames):
+        t = i / total_frames
+        zoom = 1 + (zoom_factor - 1) * t if zoom_in else zoom_factor - (zoom_factor - 1) * t
+
+        # Ma trận scale quanh tâm
+        M = cv2.getRotationMatrix2D((cx, cy), 0, zoom)
+        zoomed_image = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_LINEAR)
+
+        out.write(zoomed_image)
+
+    out.release()
+    
+def generate_video_by_image_cv2(zoom_in, in_path, blur_in_path, in_path_draft, blur_in_path_draft, out_path, second):
+    create_video_with_zoom_opencv(blur_in_path,blur_in_path_draft, second, zoom_in= True if zoom_in is None else False )
+    create_video_with_zoom_opencv(in_path,in_path_draft, second, zoom_in= False if zoom_in is None else True)
+    
+    command = [
+        "ffmpeg", "-y",
+        "-i", blur_in_path_draft,    # background video
+        "-i", in_path,               # image
+        "-i", in_path_draft,         # overlay video
+        "-i", "./public/avatar.png", # avatar image
+        "-filter_complex",
+        "[1:v]scale=iw+50:ih+50[img_scaled];"
+        "[0:v][img_scaled]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2[tmp1];"
+        "[tmp1][2:v]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2[tmp2];"
+        "[3:v]scale=200:200,format=rgba,colorchannelmixer=aa=0.7[avatar];"
+        "[tmp2][avatar]overlay=main_w-overlay_w-50:50[outv]",
+        "-map", "[outv]",             # chỉ lấy video từ filter
+        "-map", "0:a?",               # lấy audio gốc nếu có (không thì bỏ qua)
+        "-c:v", "libx264",            # encoder video
+        "-preset", "ultrafast",       # tối ưu tốc độ
+        "-crf", "23",                 # chất lượng hợp lý
+        "-c:a", "copy",               # copy audio (nhanh nhất)
+        out_path
+    ]
+    
+    subprocess.run(command)
+
 
 # create video by image with moviepy-------------------------------------------------------------
-
 def resize_to_cover(image, target_width, target_height):
     # Get the original dimensions
     original_height, original_width = image.shape[:2]
@@ -402,7 +501,7 @@ def resize_to_cover(image, target_width, target_height):
     
     return cropped_image
 
-def generate_image_moviepy(link, out_path, out_blur_path, width = None, height = None):
+def generate_image_moviepy(link, out_path, out_blur_path, width = None, height = None, crop=150):
     response = requests.get(link)
     if response.status_code == 200:
         with open(out_path, "wb") as f:
@@ -411,7 +510,7 @@ def generate_image_moviepy(link, out_path, out_blur_path, width = None, height =
         print("Yêu cầu không thành công. Mã trạng thái:", response.status_code)
 
     image = cv2.imread(out_path)
-    image = image[150:-150, 150:-150]
+    image = image[crop:-crop, crop:-crop]
     blurred_image_edit = None
     if width is not None and height is not None:
         blurred_image_edit  = resize_to_cover(image, width, height)
@@ -427,7 +526,6 @@ def generate_image_moviepy(link, out_path, out_blur_path, width = None, height =
 
     cv2.imwrite(out_path, image)
     cv2.imwrite(out_blur_path, blurred_image)
-
 
 def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, second, gif_path, is_short = False):
     clip_image = ImageClip(in_path).with_duration(second)
@@ -449,13 +547,13 @@ def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, se
         clip_image = clip_image.resized((percent * w_clip_image, percent * h_clip_image))
         clip_image = clip_image.resized(lambda t: 1 - 0.3 * t/second)
     
-    # add gif
-    gif = VideoFileClip(gif_path, has_mask= True)
-    percent_gif = 0.8 
-    gif = gif.resized((int(1920 * percent_gif), int(1080 * percent_gif)))
-    while gif.duration < second:
-        gif = concatenate_videoclips([gif, gif])
-    gif = gif.subclipped(0, second)
+    # # add gif
+    # gif = VideoFileClip(gif_path, has_mask= True)
+    # percent_gif = 0.8 
+    # gif = gif.resized((int(1920 * percent_gif), int(1080 * percent_gif)))
+    # while gif.duration < second:
+    #     gif = concatenate_videoclips([gif, gif])
+    # gif = gif.subclipped(0, second)
 
     
     # Tạo avatar clip
@@ -466,11 +564,11 @@ def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, se
     final_clip = CompositeVideoClip([
         clip_blurred_image.with_position('center'),
         clip_image.with_position('center'),
-        gif.with_position((0, 1080 if is_short else 250)),
+        # gif.with_position((0, 1080 if is_short else 250)),
         avatar_clip.with_duration(second)
         ])
 
-    final_clip.write_videofile(out_path, fps=24)
+    final_clip.write_videofile(out_path, fps=10)
     
     
 
@@ -926,6 +1024,7 @@ def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_pat
     while duration_video < audio_duration:
         video_path_list_concat.append(video_path_list[index])
         video_duration = get_media_duration(video_path_list[index])
+        print(video_path_list[index])
         print(video_duration)
         duration_video += video_duration
         if(index + 1 == video_path_list.__len__()):

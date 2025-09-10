@@ -3,7 +3,7 @@ import os
 from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
 from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content_improved
 from untils import generate_to_voice_edge, generate_thumbnail, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
-from untils import get_func_Website_to_create
+from untils import get_func_Website_to_create, generate_image_cv2, generate_video_by_image_cv2
 from db import check_link_exists, insert_link, check_authorization
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -12,11 +12,12 @@ from django.utils.text import slugify
 import time
 from data import gemini_keys
 
-def create_video_by_image(path_folder, key, link, is_moviepy = False, gif_path = None):
+
+def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif_path = None):
     img_path = f"{path_folder}/image-{key}.jpg"
     img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
     
-    if is_moviepy is False:    
+    if type_run_video == 'ffmpeg':    
         generate_image_ffmpeg(link, img_path, img_blur_path)
         random_number = random.randint(5, 10)
         generate_video_by_image_ffmpeg(
@@ -25,7 +26,7 @@ def create_video_by_image(path_folder, key, link, is_moviepy = False, gif_path =
             random_number
         )
         return f"{path_folder}/video-{key}.mkv"
-    else:
+    elif type_run_video == 'moviepy':
         generate_image_moviepy(link, img_path, img_blur_path)
         random_number = random.randint(5, 10)
         generate_video_by_image_moviepy(
@@ -37,8 +38,23 @@ def create_video_by_image(path_folder, key, link, is_moviepy = False, gif_path =
             gif_path
         )
         return f"{path_folder}/video-{key}.mp4"
+    elif type_run_video == 'cv2':
+        generate_image_cv2(link, img_path, img_blur_path, 1920, 1080, 50)
+        random_number = random.randint(5, 10)
+        generate_video_by_image_cv2(
+            1 if key % 2 == 0 else None,
+            img_path,
+            img_blur_path,
+            f"{path_folder}/image-{key}.mkv",
+            f"{path_folder}/image-blur-{key}.mkv",
+            f'{path_folder}/video-{key}.mkv',
+            random_number,
+        )
 
-def main(is_moviepy = False):
+        return f"{path_folder}/video-{key}.mkv"
+    
+
+def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = False):
     # check authorization
     is_authorization = check_authorization()
     if is_authorization is False or is_authorization is False:
@@ -84,6 +100,12 @@ def main(is_moviepy = False):
             path_videos = []
             products = None
             
+            # not run parallel create child --------------------------------------------------------------------------------
+            if is_not_run_parallel_create_child_video is True:
+                for key, link in enumerate(new_info['picture_links']):
+                    link_child_video = create_video_by_image(path_folder, key, link, type_run_video, person_info['person_gif_path'])
+                    path_videos.append(link_child_video)
+                    
             # chạy song song các task: xử lý title/desc, content, ảnh aff, video từng ảnh
             with ThreadPoolExecutor(max_workers=6) as executor:
                 future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'], gemini_keys[gemini_key_index])
@@ -91,20 +113,22 @@ def main(is_moviepy = False):
                 # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
                 # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item_amazon)
                 
-                future_videos = [
-                    executor.submit(create_video_by_image, path_folder, key, link, is_moviepy, person_info['person_gif_path'])
+                # not run parallel create child -----------------------------------------------------------------------------
+                future_videos = None if is_not_run_parallel_create_child_video is True else [
+                    executor.submit(create_video_by_image, path_folder, key, link, type_run_video, person_info['person_gif_path'])
                     for key, link in enumerate(new_info['picture_links'])
                 ]
 
                 # wait([future1, future2, future3] + future_videos)
-                wait([future1, future2] + future_videos )
+                wait(([future1, future2] + future_videos) if is_not_run_parallel_create_child_video is False else [future1, future2])
 
                 result1 = future1.result()
                 result2 = future2.result()
                 # products = future3.result()
 
-                for fut in future_videos:
-                    path_videos.append(fut.result())
+                if is_not_run_parallel_create_child_video is False:
+                    for fut in future_videos:
+                        path_videos.append(fut.result())
 
                 # cập nhật nội dung mới vào new_info
                 new_info['title'] = result1['title']
@@ -148,7 +172,7 @@ def main(is_moviepy = False):
                 future2.result()
                 future3.result()
 
-            if is_moviepy is False:
+            if type_run_video == 'ffmpeg' or type_run_video == 'cv2':
                 concat_content_videos_ffmpeg(
                     './public/intro.mkv',
                     # './pic_affs/aff.mkv',
@@ -161,7 +185,7 @@ def main(is_moviepy = False):
                     f"{path_folder}/draf2.mkv",
                     f"{path_folder}/draf3.mkv",
                 )
-            else:
+            elif type_run_video == 'moviepy':
                 concat_content_videos_moviepy(f"{path_folder}/content-voice.aac", path_videos, f"{path_folder}/result.mp4")
 
             end_time = time.time()
@@ -190,4 +214,6 @@ def main(is_moviepy = False):
                 time.sleep(60)
 
 if __name__ == "__main__":
-    main(True)
+    # type: 'ffmpeg' 'moviepy' 'cv2'
+    type = 'cv2'
+    main(type, True)
