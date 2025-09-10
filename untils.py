@@ -419,7 +419,7 @@ def generate_image_cv2(link, out_path, out_blur_path, width=None, height=None, c
     cv2.imwrite(out_blur_path, blurred_image)
     
 
-def create_video_with_zoom_opencv(image_path, output_path, duration=5, zoom_factor=1.25, fps=24, zoom_in=True):
+def create_video_with_zoom_opencv(image_path, output_path, duration=5, zoom_factor=1.25, fps=15, zoom_in=True):
     image = cv2.imread(image_path)
     h, w, _ = image.shape
     fourcc = cv2.VideoWriter_fourcc(*'XVID')  # hoặc 'mp4v'
@@ -437,7 +437,6 @@ def create_video_with_zoom_opencv(image_path, output_path, duration=5, zoom_fact
         zoomed_image = cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_LINEAR)
 
         out.write(zoomed_image)
-
     out.release()
     
 def generate_video_by_image_cv2(zoom_in, in_path, blur_in_path, in_path_draft, blur_in_path_draft, out_path, second):
