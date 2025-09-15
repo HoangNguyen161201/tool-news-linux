@@ -5,7 +5,6 @@
 ./output
 ./videos
 ./youtubes
-./__temp_voice_edge__
 
 output
 __pycache__
@@ -14,4 +13,3 @@ test
 main.exe
 videos
 youtubes
-__temp_voice_edge__
