@@ -233,7 +233,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 print(f"{message} → Đợi 20 phút rồi thử lại...")
                 data = 5
                 while data < 1200:
-                    print('đợi 20 giây vì hết link')
+                    print('đợi 20 phút vì hết link')
                     time.sleep(5)
                     data += 5
             elif "Lỗi xảy ra, không có thông tin của content" in message:

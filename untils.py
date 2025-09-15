@@ -880,7 +880,7 @@ def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
     # Mở ảnh overlay (PNG trong suốt)
     overlay = Image.open(img_person_path)
     overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
-    overlay2 = Image.open('./public/bar.png')
+    overlay2 = Image.open('./public/bar-2.png')
 
     # Đảm bảo ảnh overlay có kênh alpha
     if overlay.mode != 'RGBA':
@@ -943,7 +943,7 @@ def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
 
     # lưu ảnh với bg 
     jpg_image = Image.open(draf_path)  
-    png_image = Image.open('./public/bg/bg-1.png')
+    png_image = Image.open('./public/bg/bg-2.png')
     png_image = png_image.convert("RGBA")
     jpg_image.paste(png_image, (0, 0), png_image)
     jpg_image.save(out_path)
@@ -1451,7 +1451,7 @@ def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, draf
     if img_person_path is not None:
         overlay = Image.open(img_person_path)
         overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
-    overlay2 = Image.open('./public/bar.png')
+    overlay2 = Image.open('./public/bar-2.png')
 
     # Đảm bảo ảnh overlay có kênh alpha
     if img_person_path is not None and overlay.mode != 'RGBA':
@@ -1520,7 +1520,7 @@ def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, draf
 
     # lưu ảnh với bg 
     jpg_image = Image.open(draf_path)  
-    png_image = Image.open('./public/bg/bg-1.png')
+    png_image = Image.open('./public/bg/bg-2.png')
     png_image = png_image.convert("RGBA")
     jpg_image.paste(png_image, (0, 0), png_image)
     jpg_image.save(out_path)
@@ -1538,7 +1538,7 @@ def open_chrome_to_edit(name_chrome_yt, driver_path = "C:/Program Files/Google/C
 
 def check_identity_verification(name_chrome_yt):
     video_path = os.path.abspath(f"./public/kokoro.mp4"),
-    thumb_path = os.path.abspath(f"./public/bg/bg-1.png"),
+    thumb_path = os.path.abspath(f"./public/bg/bg-2.png"),
     user_data_dir = os.path.abspath(f"./youtubes/{name_chrome_yt}")
     
     # Tạo đối tượng ChromeOptions
