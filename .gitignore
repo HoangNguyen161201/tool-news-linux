@@ -4,6 +4,7 @@
 ./main.exe
 ./output
 ./videos
+./youtubes
 
 output
 __pycache__
@@ -11,3 +12,4 @@ _internal
 test
 main.exe
 videos
+youtubes

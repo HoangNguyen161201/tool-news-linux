@@ -1,5 +1,18 @@
-gif_paths = ['./public/gifs/gif_1.gif', './public/gifs/gif_2.gif', './public/gifs/gif_3.gif', './public/gifs/gif_4.gif']
-person_img_paths = ['./public/persons/person_1.png', './public/persons/person_2.png', './public/persons/person_3.png', './public/persons/person_4.png']
+gif_paths = ['./public/gifs/gif_1.gif', './public/gifs/gif_2.gif',
+             './public/gifs/gif_3.gif', './public/gifs/gif_4.gif']
+person_img_paths = ['./public/persons/person_1.png', './public/persons/person_2.png',
+                    './public/persons/person_3.png', './public/persons/person_4.png']
+
+data_ad = [
+    {
+        "video": './public/ad_student.mkv',
+        "des": "👉 Truy cập link khách hàng đang quảng cáo:\n-Học tại nhà: https://daythem.com/hoc-tai-nha\n-Học trực tuyến: https://daythem.com/hoc-truc-tuyen\n✨ Liên hệ chạy quảng cáo youtube giá rẻ: 01hotchannel@gmail.com"
+    },
+    {
+        "video": './public/ad_teacher.mkv',
+        "des": "👉 Truy cập link khách hàng đang quảng cáo:\n-Dạy tại nhà: https://daythem.com/day-tai-nha\n-Dạy trực tuyến: https://daythem.com/day-truc-tuyen\n✨ Liên hệ chạy quảng cáo youtube giá rẻ: 01hotchannel@gmail.com"
+    },
+]
 
 edge_voice_data = [
     "en-US-AriaNeural",
@@ -11,17 +24,6 @@ edge_voice_data = [
     "en-US-MichelleNeural",
     "en-US-RogerNeural",
     "en-US-SteffanNeural",
-]
-
-
-gemini_keys = [
-    'AIzaSyC4ZvI-VjW3GPf9DMzZT4iOMmT6DvjUH-8',
-    'AIzaSyB2j_rHJOnMA9Zi7fziRd-ccB2NANTTctA',
-    'AIzaSyA5AZYheK24asDX0smMWHmzTcOuFgIAcRw',
-    'AIzaSyDO1kguNUtt--NUE2gbEyZDWhga2BuGXeI',
-    'AIzaSyD2zA0PJvQAUWyWGk-UunQP5XeMbhlYBA8',
-    'AIzaSyAO3zWuhyUKzPsweyiEDKcuiZxLKkdUNNk',
-    'AIzaSyA9T58LWbmaHJFuCPCbJiXxPx_Y2DoiIVk'
 ]
 
 
@@ -180,42 +182,42 @@ data_support = [
         "discount": 13,
         "link_item": "https://www.amazon.com/Ninja-NC301-placeholder-Cream-Maker/dp/B08QXB9BH5/ref=zg_mg_g_kitchen_d_sccl_22/141-6250380-7856552?th=1"
     },
-    { 
-        "content": "Protect your baby from UV rays with this Monobeach Baby Beach Tent! Ideal for beach trips. Check it out: https://amzn.to/4mhXDpJ", 
-        "link_img": "https://f.media-amazon.com/images/I/6103YlWQqoS._AC_SL1500_.jpg", 
-        "price": 29.7, 
-        "discount": 37, 
+    {
+        "content": "Protect your baby from UV rays with this Monobeach Baby Beach Tent! Ideal for beach trips. Check it out: https://amzn.to/4mhXDpJ",
+        "link_img": "https://f.media-amazon.com/images/I/6103YlWQqoS._AC_SL1500_.jpg",
+        "price": 29.7,
+        "discount": 37,
         "link_item": "https://www.amazon.com/Monobeach-Portable-Protection-Shelter-Infant/dp/B01K15UQ4I/ref=zg_mg_g_sporting-goods_d_sccl_32/141-6250380-7856552?th=1"
     },
-    { 
-        "content": "Track your health and manage stress with the Fitbit Inspire 3 Fitness Tracker. Keep active & relaxed! Check it out: https://amzn.to/46BHg2W", 
-        "link_img": "https://f.media-amazon.com/images/I/51aGiZ-UJ-L._AC_SL1200_.jpg", 
-        "price": 99.95, 
-        "discount": 17, 
+    {
+        "content": "Track your health and manage stress with the Fitbit Inspire 3 Fitness Tracker. Keep active & relaxed! Check it out: https://amzn.to/46BHg2W",
+        "link_img": "https://f.media-amazon.com/images/I/51aGiZ-UJ-L._AC_SL1200_.jpg",
+        "price": 99.95,
+        "discount": 17,
         "link_item": "https://www.amazon.com/Fitbit-Management-Intensity-Tracking-Included/dp/B0B5FCYMFD/ref=zg_mg_g_sporting-goods_d_sccl_36/141-6250380-7856552?th=1"
     },
-    { 
-        "content": "Boost your child's balance and coordination with the Micro Mini Deluxe Scooter. Durable and fun! Check it out: https://amzn.to/4l4LcfW", 
-        "link_img": "https://f.media-amazon.com/images/I/71YWicteDKL._AC_SL1500_.jpg", 
-        "price": 90, 
-        "discount": 0, 
+    {
+        "content": "Boost your child's balance and coordination with the Micro Mini Deluxe Scooter. Durable and fun! Check it out: https://amzn.to/4l4LcfW",
+        "link_img": "https://f.media-amazon.com/images/I/71YWicteDKL._AC_SL1500_.jpg",
+        "price": 90,
+        "discount": 0,
         "link_item": "https://www.amazon.com/Micro-Mini-Deluxe-Scooter-Blue/dp/B01BE0JGE0/ref=zg_mg_g_sporting-goods_d_sccl_42/141-6250380-7856552?th=1"
     },
-    { 
-        "content": "Decorate your room with vibrant LED lights. Sync them to music and create an immersive atmosphere! Check it out: https://amzn.to/3U6Tid3", 
-        "link_img": "https://f.media-amazon.com/images/I/81cEqfpA5+L._AC_SL1500_.jpg", 
-        "price": 14, 
-        "discount": 29, 
+    {
+        "content": "Decorate your room with vibrant LED lights. Sync them to music and create an immersive atmosphere! Check it out: https://amzn.to/3U6Tid3",
+        "link_img": "https://f.media-amazon.com/images/I/81cEqfpA5+L._AC_SL1500_.jpg",
+        "price": 14,
+        "discount": 29,
         "link_item": "https://www.amazon.com/Daybetter-Lights-Control-Bedroom-Changing/dp/B08JSFH1G6/ref=zg_mg_g_hi_d_sccl_13/141-6250380-7856552?th=1"
     },
-    { 
-        "content": "Help your toddler develop balance with the SEREED Baby Balance Bike. Safe and sturdy for first time riders. Check it out: https://amzn.to/479WAE2", 
-        "link_img": "https://f.media-amazon.com/images/I/61EKfoSmrUL._AC_SL1500_.jpg", 
-        "price": 44, 
-        "discount": 14, 
+    {
+        "content": "Help your toddler develop balance with the SEREED Baby Balance Bike. Safe and sturdy for first time riders. Check it out: https://amzn.to/479WAE2",
+        "link_img": "https://f.media-amazon.com/images/I/61EKfoSmrUL._AC_SL1500_.jpg",
+        "price": 44,
+        "discount": 14,
         "link_item": "https://www.amazon.com/SEREED-Balance-Months-Toddler-Birthday/dp/B0BVJ1KL96/ref=zg_mg_g_toys-and-games_d_sccl_3/141-6250380-7856552?th=1"
     },
-    
+
     {
         "content": "Keep your phone steady while driving with this versatile 3 in 1 car mount. Check it out: https://amzn.to/4mk7hIz",
         "link_img": "https://f.media-amazon.com/images/I/91Yg33Uoc6L._AC_SL1500_.jpg",
@@ -244,7 +246,7 @@ data_support = [
         "discount": 0,
         "link_item": "https://www.amazon.com/Ouwoer-Certified-Adjustable-Multi-Sport-Toddler/dp/B07CXL2NCT/ref=zg_mg_g_sporting-goods_d_sccl_20/141-6250380-7856552?th=1"
     },
-    
+
     {
         "content": "2021 Apple iPad, Perfect for staying updated on the latest political news. Check it out: https://amzn.to/45aoayq",
         "link_img": "https://f.media-amazon.com/images/I/61fbS-pklLL._AC_SL1500_.jpg",

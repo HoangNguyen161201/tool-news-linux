@@ -2,7 +2,7 @@ import requests
 import os
 from bs4 import BeautifulSoup
 import random
-from data import gif_paths, person_img_paths, gemini_keys
+from data import gif_paths, person_img_paths
 import asyncio
 import cv2
 import subprocess
@@ -29,10 +29,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pyperclip
 from data import data_support
-from db import get_webiste
+from db_mongodb import get_webiste
 from datetime import datetime, timedelta
 from moviepy import ImageClip, VideoFileClip, concatenate_videoclips, CompositeVideoClip, AudioFileClip, TextClip, concatenate_audioclips
 import numpy as np
+
 
 # get link in news website -------------------------------------------------------------------------------------
 # kenh14 star---
@@ -322,7 +323,7 @@ def generate_video_by_image_ffmpeg( in_path, out_path, second, is_set_avatar = T
         "ffmpeg",
         "-y",
         "-framerate", "1", "-loop", "1", "-t", str(duration), "-i", in_path,
-        "-framerate", "1", "-loop", "1", "-t", str(duration), "-i", './public/avatar.png',
+        "-framerate", "1", "-loop", "1", "-t", str(duration), "-i", './public/avatar2.png',
         "-filter_complex",
         f"""
         [0:v]scale={width}:{height},setsar=1,setpts=PTS-STARTPTS[bg]; \
@@ -448,7 +449,7 @@ def generate_video_by_image_cv2(zoom_in, in_path, blur_in_path, in_path_draft, b
         "-i", blur_in_path_draft,    # background video
         "-i", in_path,               # image
         "-i", in_path_draft,         # overlay video
-        "-i", "./public/avatar.png", # avatar image
+        "-i", "./public/avatar2.png", # avatar image
         "-filter_complex",
         "[1:v]scale=iw+50:ih+50[img_scaled];"
         "[0:v][img_scaled]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2[tmp1];"
@@ -556,7 +557,7 @@ def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, se
 
     
     # Tạo avatar clip
-    avatar_clip = ImageClip('./public/avatar.png').resized((200, 200))
+    avatar_clip = ImageClip('./public/avatar2.png').resized((200, 200))
     avatar_clip = avatar_clip.with_opacity(0.7)
     avatar_clip = avatar_clip.with_position((830 if is_short else 1650,  50))
 
@@ -824,18 +825,18 @@ def generate_image_and_video_aff_and_get_three_item_amazon():
         return None
 
 
-def generate_content(content, model='gemini-1.5-flash', api_key= gemini_keys[0]):
+def generate_content(content, model='gemini-1.5-flash', api_key = None):
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model)
     response = model.generate_content(content)
     return response.text
 
-def generate_title_description_improved(title, description, gemini_key = gemini_keys[0]):
+def generate_title_description_improved(title, description, gemini_key = None):
     while True:
         title_des = generate_content(f'''tôi đang có các thông tin như sau:
                                     - title: {title}
                                     - description: {description}
-                                    hãy generate lại các thông tin trên cho tôi bằng tiếng anh sao cho hay và nổi bật, chuẩn seo youtube.
+                                    hãy generate lại các thông tin trên cho tôi bằng tiếng việt sao cho hay và nổi bật, chuẩn seo youtube.
                                     Trả ra dưới định dạng như sau:
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có các dấu ký hiệu đặt biệt trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
@@ -854,7 +855,7 @@ def generate_title_description_improved(title, description, gemini_key = gemini_
             }
 
 # tạo lại nội dung content
-def generate_content_improved(content, title, gemini_key = gemini_keys[0]):
+def generate_content_improved(content, title, gemini_key = None):
     return generate_content(f'''
         Tôi có một bản tin mới. Hãy viết lại bằng tiếng việt sao cho hấp dẫn, súc tích và phù hợp để đọc lên trong một video tin tức trên YouTube (voice-over). Nội dung cần được viết dưới dạng khách quan ở ngôi thứ ba, không dùng tôi, của tôi, chúng ta, hay bất kỳ đại từ ngôi thứ nhất nào.
         title là: {title},
@@ -1012,7 +1013,30 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
     asyncio.run(_run())
 
 # concat video by ffmpeg ----------------------------------------------
+def add_thumbnail_to_video(input_video, input_image, output_video):
+    # Kích thước mong muốn
+    width = 177
+    height = 85
+    bottom_margin = 40
+    right_margin = 27
+
+    # Lệnh ffmpeg
+    cmd = [
+        "ffmpeg",
+        "-i", input_video,        # video gốc
+        "-i", input_image,        # ảnh cần chèn
+        "-filter_complex",
+        f"[1:v]scale={width}:{height}[img];[0:v][img]overlay=W-w-{right_margin}:H-h-{bottom_margin}",
+        "-codec:a", "copy",       # giữ nguyên audio
+        output_video
+    ]
+
+    subprocess.run(cmd, check=True)
+    
 def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
+    if short_link_path is not None:
+        add_thumbnail_to_video(short_link_path, './videos/thumbnail.jpg',short_link_out_path)
+        
     # Load âm thanh
     audio_duration = get_media_duration(audio_out_path)
     duration_video = 0
@@ -1062,9 +1086,6 @@ def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_pat
     # cắt đúng duration và gắn âm thanh
     import_audio_to_video(draf_out_path, draf_out_path_2, audio_out_path, audio_duration)
     normalize_video(draf_out_path_2, draf_out_path_3)
-    if short_link_path is not None:
-        normalize_video(short_link_path, short_link_out_path)
-
 
     # nối intro với video
     with open(list_file, "w", encoding="utf-8") as f:
@@ -1178,13 +1199,13 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     # subprocess.Popen([chrome_path, f'--remote-debugging-port=9223', f'--user-data-dir={user_data_dir}'])
     # time.sleep(5)
 
-
     # Tạo đối tượng ChromeOptions
     chrome_options = Options()
-
+    
     # Chỉ định đường dẫn đến thư mục user data
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-    chrome_options.add_argument(f"user-data-dir={user_data_dir}")
+    user_data_dir_abspath = os.path.abspath(user_data_dir)
+    chrome_options.add_argument(f"user-data-dir={user_data_dir_abspath}")
     chrome_options.add_argument("profile-directory=Default")  # Nếu bạn muốn sử dụng profile mặc định
     # chrome_options.add_argument("--headless")  # Chạy trong chế độ không giao diện
     # chrome_options.add_argument("--disable-gpu")  # Tắt GPU (thường dùng trong môi trường máy chủ)
@@ -1413,90 +1434,162 @@ def check_file_exists_on_vps(host, username, password, remote_path, port=22):
         return False
     
 
-# def generate_thumbnail(img_path, img_blur_path, img_person_path, draf_path, out_path, text):
-#     text = text.upper()
-#     # Mở ảnh thứ nhất (ảnh nền chính)
-#     background = Image.open(img_path)
-#     bg_w, bg_h = background.size
-#     percent = ((1920 - 60) / bg_w) if ((1920 - 60) / bg_w) * bg_h < 1020 else (1020 / bg_h)
-#     background = background.resize((int(bg_w * percent),int(bg_h * percent)))
+def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, draf_path, out_path, text):
+    text = text.upper()
+    # Mở ảnh thứ nhất (ảnh nền chính)
+    background = Image.open(img_path)
+    bg_w, bg_h = background.size
+    percent = ((1920 - 60) / bg_w) if ((1920 - 60) / bg_w) * bg_h < 1020 else (1020 / bg_h)
+    background = background.resize((int(bg_w * percent),int(bg_h * percent)))
 
-#     # Mở ảnh thứ hai (ảnh nền phụ) và thay đổi kích thước
-#     background_2 = Image.open(img_blur_path)
-#     background_2 = background_2.resize((1920, 1080))
+    # Mở ảnh thứ hai (ảnh nền phụ) và thay đổi kích thước
+    background_2 = Image.open(img_blur_path)
+    background_2 = background_2.resize((1920, 1080))
 
-#     # Mở ảnh overlay (PNG trong suốt)
-#     overlay = Image.open(img_person_path)
-#     overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
-#     overlay2 = Image.open('./public/bar.png')
+    overlay = None
+    # Mở ảnh overlay (PNG trong suốt)
+    if img_person_path is not None:
+        overlay = Image.open(img_person_path)
+        overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
+    overlay2 = Image.open('./public/bar.png')
 
-#     # Đảm bảo ảnh overlay có kênh alpha
-#     if overlay.mode != 'RGBA':
-#         overlay = overlay.convert('RGBA')
+    # Đảm bảo ảnh overlay có kênh alpha
+    if img_person_path is not None and overlay.mode != 'RGBA':
+        overlay = overlay.convert('RGBA')
 
-#     # Tính toán vị trí để đặt ảnh nền chính vào giữa ảnh nền phụ
-#     bg2_w, bg2_h = background_2.size
-#     x = (bg2_w - int(bg_w * percent)) // 2
-#     y = (bg2_h - int(bg_h * percent)) // 2
+    # Tính toán vị trí để đặt ảnh nền chính vào giữa ảnh nền phụ
+    bg2_w, bg2_h = background_2.size
+    x = (bg2_w - int(bg_w * percent)) // 2
+    y = (bg2_h - int(bg_h * percent)) // 2
 
-#     # Dán ảnh nền chính vào giữa ảnh nền phụ
-#     background_2.paste(background, (x, y))
+    # Dán ảnh nền chính vào giữa ảnh nền phụ
+    background_2.paste(background, (x, y))
 
-#     # Dán ảnh overlay lên ảnh nền chính
-#     background_2.paste(overlay, (0, 250), overlay)
-#     background_2.paste(overlay2, (0, 0), overlay2)
+    # Dán ảnh overlay lên ảnh nền chính
+    if img_person_path is not None:
+        background_2.paste(overlay, (0, 250), overlay)
+    background_2.paste(overlay2, (0, 0), overlay2)
     
-#        # Thêm văn bản vào ảnh
-#     draw = ImageDraw.Draw(background_2)
-#     font = ImageFont.truetype("./fonts/arial/arial.ttf", 55)  # Đặt font và kích thước font
-#     max_width = 1350
-#     lines = []
+       # Thêm văn bản vào ảnh
+    draw = ImageDraw.Draw(background_2)
+    font = ImageFont.truetype("./fonts/arial/arial.ttf", 55)  # Đặt font và kích thước font
+    max_width = 1350
+    lines = []
 
-#     # Tách văn bản thành các dòng có độ dài tối đa là 1000 pixel
-#     words = text.split()
-#     current_line = []
+    # Tách văn bản thành các dòng có độ dài tối đa là 1000 pixel
+    words = text.split()
+    current_line = []
 
-#     for word in words:
-#         test_line = ' '.join(current_line + [word])
-#         bbox = draw.textbbox((0, 0), test_line, font=font)
-#         test_width = bbox[2] - bbox[0]
-#         if test_width <= max_width:
-#             current_line.append(word)
-#         else:
-#             lines.append(' '.join(current_line))
-#             current_line = [word]
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        bbox = draw.textbbox((0, 0), test_line, font=font)
+        test_width = bbox[2] - bbox[0]
+        if test_width <= max_width:
+            current_line.append(word)
+        else:
+            lines.append(' '.join(current_line))
+            current_line = [word]
 
-#     if current_line:
-#         lines.append(' '.join(current_line))
+    if current_line:
+        lines.append(' '.join(current_line))
 
-#     # Tính tổng chiều cao của tất cả các dòng văn bản
-#     total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines) + (len(lines) - 1) * 5
+    # Tính tổng chiều cao của tất cả các dòng văn bản
+    total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines) + (len(lines) - 1) * 5
 
-#     # Tính toán vị trí y ban đầu để căn giữa theo chiều dọc
-#     box_height = 380
-#     y_text_start = bg2_h - box_height + (box_height - total_text_height) // 2
+    # Tính toán vị trí y ban đầu để căn giữa theo chiều dọc
+    box_height = 380
+    y_text_start = bg2_h - box_height + (box_height - total_text_height) // 2
 
-#     # Vẽ các dòng văn bản vào ảnh
-#     x_text = 480  # Khoảng cách từ trái sang
-#     y_text = y_text_start
+    # Vẽ các dòng văn bản vào ảnh
+    x_text = 480  # Khoảng cách từ trái sang
+    y_text = y_text_start
 
-#     for line in lines:  # Vẽ từ trên xuống dưới
-#         bbox = draw.textbbox((0, 0), line, font=font)
-#         line_height = bbox[3] - bbox[1]
-#         # Vẽ văn bản nhiều lần để làm đậm chữ
-#         for offset in [
-#     (0, 0), (1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1),
-#     (2, 0), (0, 2), (2, 2), (-2, 0), (0, -2), (-2, -2), (2, -2), (-2, 2)
-# ]:
-#             draw.text((x_text + offset[0], y_text + offset[1]), line, font=font, fill="white")
-#         y_text += int(line_height * 1.8)
+    for line in lines:  # Vẽ từ trên xuống dưới
+        bbox = draw.textbbox((0, 0), line, font=font)
+        line_height = bbox[3] - bbox[1]
+        # Vẽ văn bản nhiều lần để làm đậm chữ
+        for offset in [
+    (0, 0), (1, 0), (0, 1), (1, 1), (-1, 0), (0, -1), (-1, -1), (1, -1), (-1, 1),
+    (2, 0), (0, 2), (2, 2), (-2, 0), (0, -2), (-2, -2), (2, -2), (-2, 2)
+]:
+            draw.text((x_text + offset[0], y_text + offset[1]), line, font=font, fill="white")
+        y_text += int(line_height * 1.8)
 
-#     # Lưu ảnh draf 
-#     background_2.save(draf_path)
+    # Lưu ảnh draf 
+    background_2.save(draf_path)
 
-#     # lưu ảnh với bg 
-#     jpg_image = Image.open(draf_path)  
-#     png_image = Image.open('./public/bg/bg-1.png')
-#     png_image = png_image.convert("RGBA")
-#     jpg_image.paste(png_image, (0, 0), png_image)
-#     jpg_image.save(out_path)
+    # lưu ảnh với bg 
+    jpg_image = Image.open(draf_path)  
+    png_image = Image.open('./public/bg/bg-1.png')
+    png_image = png_image.convert("RGBA")
+    jpg_image.paste(png_image, (0, 0), png_image)
+    jpg_image.save(out_path)
+
+
+def open_chrome_to_edit(name_chrome_yt, driver_path = "C:/Program Files/Google/Chrome/Application/chrome.exe"):
+    user_data_dir = os.path.abspath(f"./youtubes/{name_chrome_yt}")
+    process = subprocess.Popen([driver_path, f'--remote-debugging-port=9223', f'--user-data-dir={user_data_dir}'])
+    input('nhấn bất kì để đóng chrome:')
+    process.terminate()  # gửi tín hiệu terminate
+    try:
+        process.wait(timeout=30)  # đợi chrome tắt
+    except subprocess.TimeoutExpired:
+        process.kill()  # nếu không tắt thì kill hẳn là sao không hiểu
+
+def check_identity_verification(name_chrome_yt):
+    video_path = os.path.abspath(f"./public/kokoro.mp4"),
+    thumb_path = os.path.abspath(f"./public/bg/bg-1.png"),
+    user_data_dir = os.path.abspath(f"./youtubes/{name_chrome_yt}")
+    
+    # Tạo đối tượng ChromeOptions
+    chrome_options = Options()
+    
+    # Chỉ định đường dẫn đến thư mục user data
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    user_data_dir_abspath = os.path.abspath(user_data_dir)
+    chrome_options.add_argument(f"user-data-dir={user_data_dir_abspath}")
+    chrome_options.add_argument("profile-directory=Default")  # Nếu bạn muốn sử dụng profile mặc định
+    # chrome_options.add_argument("--headless")  # Chạy trong chế độ không giao diện
+    # chrome_options.add_argument("--disable-gpu")  # Tắt GPU (thường dùng trong môi trường máy chủ)
+
+    # Sử dụng Service để chỉ định ChromeDriver
+    service = Service(ChromeDriverManager().install())
+
+
+    # Khởi tạo WebDriver với các tùy chọn
+    browser = webdriver.Chrome(service=service, options=chrome_options)
+
+    browser.get("https://studio.youtube.com/")
+    # await browser load end
+    WebDriverWait(browser, 100).until(
+        EC.presence_of_all_elements_located((By.ID, 'create-icon'))
+    )
+
+
+    browser.find_element(By.ID, 'create-icon').click()
+    time.sleep(1)
+
+    browser.find_element(By.ID, 'text-item-0').click()
+    time.sleep(10)
+
+    # upload video
+    print('upload video in youtube')
+    file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
+    file_input.send_keys(video_path)
+    time.sleep(3)
+
+
+    # upload thumbnail
+    print('upload thumbnail in youtube')
+    WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.ID, 'file-loader'))
+    )
+    thumbnail_input = browser.find_element(By.ID, 'file-loader')
+    thumbnail_input.send_keys(thumb_path)
+    time.sleep(3)
+    
+    input('nhấn bất kì để đóng chrome:')
+    browser.quit()
+    
+
+    
