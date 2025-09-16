@@ -1201,8 +1201,6 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     browser.find_element(By.ID, 'create-icon').click()
     time.sleep(1)
 
-    print('nguyen quang hoang')
-    time.sleep(10000)
 
     WebDriverWait(browser, 100).until(
         EC.element_to_be_clickable((By.ID, 'text-item-0'))
@@ -1210,6 +1208,9 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     
     browser.find_element(By.ID, 'text-item-0').click()
     time.sleep(10)
+    
+    print('nguyen quang hoang')
+    time.sleep(10000)
 
     # upload video
     print('upload video in youtube')
