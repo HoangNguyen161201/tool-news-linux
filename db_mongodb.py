@@ -70,7 +70,7 @@ def check_not_exist_to_create_ip():
             "ip": local_ip,
             "youtubes": [],
             "geminiKeys": [],
-            "driverPath": "C:/Program Files/Google/Chrome/Application/chrome.exe"
+            "driverPath": "/usr/bin/google-chrome-stable"
         })
 
     
