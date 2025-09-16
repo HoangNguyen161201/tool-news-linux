@@ -238,12 +238,14 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 os.path.abspath(f"{path_folder}/{title_slug}.mkv"),
                 os.path.abspath(f"{path_folder}/thumbnail.jpg"),
             )
-            if data_by_ip['youtubes'][index_youtube].__len__() > 1:
+            if data_by_ip['youtubes'].__len__() > 1:
                 index_youtube += 1
-                if(data_by_ip['youtubes'][index_youtube].__len__() <= index_youtube):
+                if(data_by_ip['youtubes'].__len__() <= index_youtube):
                     index_youtube = 0
+                print('chờ 10 phút')
                 time.sleep(60 * 10)
             else:
+                print('chờ 15 phút')
                 time.sleep(60 * 15)
             print('Tiếp tục...')
         except Exception as e:
