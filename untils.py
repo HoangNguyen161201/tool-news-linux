@@ -1364,6 +1364,9 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
         submit_button.click()
 
     time.sleep(10)
+    WebDriverWait(browser, 100).until(
+            EC.presence_of_all_elements_located((By.ID, 'share-url'))
+        )
     browser.quit()
 
 
