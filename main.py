@@ -330,7 +330,7 @@ if __name__ == "__main__":
                 elif func1.startswith("4-"):
                     text = func1[2:]
                     if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
-                        check_identity_verification(text, data.get('driverPath'))
+                        check_identity_verification(text)
                     else:
                         print('Chưa tồn tại trình duyệt này')
                 
