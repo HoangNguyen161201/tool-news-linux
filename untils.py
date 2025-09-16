@@ -1545,35 +1545,35 @@ def check_identity_verification(name_chrome_yt):
     )
 
 
-    browser.find_element(By.ID, 'create-icon').click()
-    time.sleep(1)
+    # browser.find_element(By.ID, 'create-icon').click()
+    # time.sleep(1)
 
-    WebDriverWait(browser, 100).until(
-        EC.element_to_be_clickable((By.ID, 'text-item-0'))
-    )
+    # WebDriverWait(browser, 100).until(
+    #     EC.element_to_be_clickable((By.ID, 'text-item-0'))
+    # )
         
-    browser.find_element(By.ID, 'text-item-0').click()
-    time.sleep(10)
+    # browser.find_element(By.ID, 'text-item-0').click()
+    # time.sleep(10)
 
-    # upload video
-    print('upload video in youtube')
-    # chờ tối đa 100 giây cho ít nhất 2 input xuất hiện
-    WebDriverWait(browser, 100).until(
-        lambda d: d.find_elements(By.TAG_NAME, 'input') if len(d.find_elements(By.TAG_NAME, 'input')) > 1 else False
-    )
-    file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
-    file_input.send_keys(video_path)
-    time.sleep(3)
+    # # upload video
+    # print('upload video in youtube')
+    # # chờ tối đa 100 giây cho ít nhất 2 input xuất hiện
+    # WebDriverWait(browser, 100).until(
+    #     lambda d: d.find_elements(By.TAG_NAME, 'input') if len(d.find_elements(By.TAG_NAME, 'input')) > 1 else False
+    # )
+    # file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
+    # file_input.send_keys(video_path)
+    # time.sleep(3)
 
 
-    # upload thumbnail
-    print('upload thumbnail in youtube')
-    WebDriverWait(browser, 10).until(
-        EC.visibility_of_element_located((By.ID, 'file-loader'))
-    )
-    thumbnail_input = browser.find_element(By.ID, 'file-loader')
-    thumbnail_input.send_keys(thumb_path)
-    time.sleep(3)
+    # # upload thumbnail
+    # print('upload thumbnail in youtube')
+    # WebDriverWait(browser, 10).until(
+    #     EC.visibility_of_element_located((By.ID, 'file-loader'))
+    # )
+    # thumbnail_input = browser.find_element(By.ID, 'file-loader')
+    # thumbnail_input.send_keys(thumb_path)
+    # time.sleep(3)
     
     input('nhấn bất kì để đóng chrome:')
     browser.quit()
