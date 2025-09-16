@@ -310,7 +310,7 @@ if __name__ == "__main__":
                         print('đã tồn tại chrome youtube này rồi')
                     else:
                         add_youtube_to_ip(text)
-                        open_chrome_to_edit(text)
+                        open_chrome_to_edit(text, data.get('driverPath'))
                 elif func1.startswith("2-"):
                     text = func1[2:]
                     if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
@@ -324,13 +324,13 @@ if __name__ == "__main__":
                 elif func1.startswith("3-"):
                     text = func1[2:]
                     if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
-                        open_chrome_to_edit(text)
+                        open_chrome_to_edit(text, data.get('driverPath'))
                     else:
                         print('Chưa tồn tại trình duyệt này')
                 elif func1.startswith("4-"):
                     text = func1[2:]
                     if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
-                        check_identity_verification(text)
+                        check_identity_verification(text, data.get('driverPath'))
                     else:
                         print('Chưa tồn tại trình duyệt này')
                 
