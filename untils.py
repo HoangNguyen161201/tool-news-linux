@@ -1205,19 +1205,22 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     WebDriverWait(browser, 100).until(
         EC.element_to_be_clickable((By.ID, 'text-item-0'))
     )
-    
+
     browser.find_element(By.ID, 'text-item-0').click()
     time.sleep(10)
     
-    print('nguyen quang hoang')
-    time.sleep(10000)
-
     # upload video
     print('upload video in youtube')
+    WebDriverWait(browser, 100).until(
+        lambda d: len(d.find_elements(By.TAG_NAME, 'input')) > 1  # Đảm bảo có ít nhất 2 input
+    )
+    
     file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
     file_input.send_keys(video_path)
     time.sleep(3)
 
+    print('nguyen quang hoang')
+    time.sleep(10000)
 
     # upload thumbnail
     print('upload thumbnail in youtube')
@@ -1519,64 +1522,67 @@ def open_chrome_to_edit(name_chrome_yt, driver_path = "C:/Program Files/Google/C
         process.kill()  # nếu không tắt thì kill hẳn là sao không hiểu
 
 def check_identity_verification(name_chrome_yt):
-    video_path = os.path.abspath(f"./public/kokoro.mp4"),
-    thumb_path = os.path.abspath(f"./public/bg/bg-2.png"),
-    user_data_dir = os.path.abspath(f"./youtubes/{name_chrome_yt}")
-    
-    # Tạo đối tượng ChromeOptions
-    chrome_options = Options()
-    
-    # Chỉ định đường dẫn đến thư mục user data
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-    user_data_dir_abspath = os.path.abspath(user_data_dir)
-    chrome_options.add_argument(f"user-data-dir={user_data_dir_abspath}")
-    chrome_options.add_argument("profile-directory=Default")  # Nếu bạn muốn sử dụng profile mặc định
-    # chrome_options.add_argument("--headless")  # Chạy trong chế độ không giao diện
-    # chrome_options.add_argument("--disable-gpu")  # Tắt GPU (thường dùng trong môi trường máy chủ)
-
-    # Sử dụng Service để chỉ định ChromeDriver
-    service = Service(ChromeDriverManager().install())
-
-
-    # Khởi tạo WebDriver với các tùy chọn
-    browser = webdriver.Chrome(service=service, options=chrome_options)
-
-    browser.get("https://studio.youtube.com/")
-    # await browser load end
-    WebDriverWait(browser, 100).until(
-        EC.element_to_be_clickable((By.ID, 'create-icon'))
-    )
-
-
-    # browser.find_element(By.ID, 'create-icon').click()
-    # time.sleep(1)
-
-    # WebDriverWait(browser, 100).until(
-    #     EC.element_to_be_clickable((By.ID, 'text-item-0'))
-    # )
+    try:
+        video_path = os.path.abspath(f"./public/kokoro.mp4"),
+        thumb_path = os.path.abspath(f"./public/bg/bg-2.png"),
+        user_data_dir = os.path.abspath(f"./youtubes/{name_chrome_yt}")
         
-    # browser.find_element(By.ID, 'text-item-0').click()
-    # time.sleep(10)
+        # Tạo đối tượng ChromeOptions
+        chrome_options = Options()
+        
+        # Chỉ định đường dẫn đến thư mục user data
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        user_data_dir_abspath = os.path.abspath(user_data_dir)
+        chrome_options.add_argument(f"user-data-dir={user_data_dir_abspath}")
+        chrome_options.add_argument("profile-directory=Default")  # Nếu bạn muốn sử dụng profile mặc định
+        # chrome_options.add_argument("--headless")  # Chạy trong chế độ không giao diện
+        # chrome_options.add_argument("--disable-gpu")  # Tắt GPU (thường dùng trong môi trường máy chủ)
 
-    # # upload video
-    # print('upload video in youtube')
-    # # chờ tối đa 100 giây cho ít nhất 2 input xuất hiện
-    # WebDriverWait(browser, 100).until(
-    #     lambda d: d.find_elements(By.TAG_NAME, 'input') if len(d.find_elements(By.TAG_NAME, 'input')) > 1 else False
-    # )
-    # file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
-    # file_input.send_keys(video_path)
-    # time.sleep(3)
+        # Sử dụng Service để chỉ định ChromeDriver
+        service = Service(ChromeDriverManager().install())
 
 
-    # # upload thumbnail
-    # print('upload thumbnail in youtube')
-    # WebDriverWait(browser, 10).until(
-    #     EC.visibility_of_element_located((By.ID, 'file-loader'))
-    # )
-    # thumbnail_input = browser.find_element(By.ID, 'file-loader')
-    # thumbnail_input.send_keys(thumb_path)
-    # time.sleep(3)
+        # Khởi tạo WebDriver với các tùy chọn
+        browser = webdriver.Chrome(service=service, options=chrome_options)
+
+        browser.get("https://studio.youtube.com/")
+        # await browser load end
+        WebDriverWait(browser, 100).until(
+            EC.element_to_be_clickable((By.ID, 'create-icon'))
+        )
+
+
+        browser.find_element(By.ID, 'create-icon').click()
+        time.sleep(1)
+
+        WebDriverWait(browser, 100).until(
+            EC.element_to_be_clickable((By.ID, 'text-item-0'))
+        )
+            
+        browser.find_element(By.ID, 'text-item-0').click()
+        time.sleep(10)
+
+        # upload video
+        print('upload video in youtube')
+        # chờ tối đa 100 giây cho ít nhất 2 input xuất hiện
+        WebDriverWait(browser, 100).until(
+            lambda d: d.find_elements(By.TAG_NAME, 'input') if len(d.find_elements(By.TAG_NAME, 'input')) > 1 else False
+        )
+        file_input = browser.find_elements(By.TAG_NAME, 'input')[1]
+        file_input.send_keys(video_path)
+        time.sleep(3)
+
+
+        # upload thumbnail
+        print('upload thumbnail in youtube')
+        WebDriverWait(browser, 10).until(
+            EC.visibility_of_element_located((By.ID, 'file-loader'))
+        )
+        thumbnail_input = browser.find_element(By.ID, 'file-loader')
+        thumbnail_input.send_keys(thumb_path)
+        time.sleep(3)
+    except:
+        print('error')
     
     input('nhấn bất kì để đóng chrome:')
     browser.quit()
