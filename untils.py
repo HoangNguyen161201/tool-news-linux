@@ -1219,17 +1219,18 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     file_input.send_keys(video_path)
     time.sleep(3)
 
-    print('nguyen quang hoang')
-    time.sleep(10000)
 
     # upload thumbnail
     print('upload thumbnail in youtube')
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 100).until(
         EC.presence_of_all_elements_located((By.ID, 'file-loader'))
     )
     thumbnail_input = browser.find_element(By.ID, 'file-loader')
     thumbnail_input.send_keys(video_thumbnail)
     time.sleep(3)
+    
+    print('nguyen quang hoang')
+    time.sleep(10000)
 
 
     # enter title
