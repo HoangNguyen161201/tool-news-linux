@@ -1189,7 +1189,6 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     # Sử dụng Service để chỉ định ChromeDriver
     service = Service(ChromeDriverManager().install())
 
-
     # Khởi tạo WebDriver với các tùy chọn
     browser = webdriver.Chrome(service=service, options=chrome_options)
 
@@ -1199,13 +1198,16 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
         EC.element_to_be_clickable((By.ID, 'create-icon'))
     )
 
-
     browser.find_element(By.ID, 'create-icon').click()
     time.sleep(1)
+
+    print('nguyen quang hoang')
+    time.sleep(10000)
 
     WebDriverWait(browser, 100).until(
         EC.element_to_be_clickable((By.ID, 'text-item-0'))
     )
+    
     browser.find_element(By.ID, 'text-item-0').click()
     time.sleep(10)
 
