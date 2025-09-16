@@ -3,8 +3,8 @@ import os
 from untils import write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
 from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content_improved
 from untils import upload_yt, generate_to_voice_edge, generate_thumbnail, generate_thumbnail_moviepy_c2, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
-from untils import check_identity_verification, get_func_Website_to_create, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
-from db_mongodb import check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
+from untils import check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
+from db_mongodb import get_func_to_get_link, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
 # from slugify import slugify
@@ -12,6 +12,8 @@ from django.utils.text import slugify
 import time
 import shutil
 from data import data_ad
+import requests
+from bs4 import BeautifulSoup
 
 def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif_path = None):
     img_path = f"{path_folder}/image-{key}.jpg"
@@ -57,6 +59,8 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
 def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = False):
     # lấy data
     data_by_ip = find_one_ip()
+    index_youtube = 0
+    
     # check authorization
     is_authorization = check_authorization()
     if is_authorization is False or is_authorization is False:
@@ -78,13 +82,21 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             os.makedirs(path_folder)
 
             # lấy tất cả link tin tức
-            website = get_func_Website_to_create()
-            link_news = website['get_links']()
-
-            # kiểm tra link nào chưa xử lý
-            for link in link_news:
-                if not check_link_exists(link):
-                    current_link = link
+            data_websites = get_func_to_get_link()
+            index_website = 0
+            for index, website in enumerate(data_websites):
+                namespace = {}
+                exec(website['func'], globals(), namespace)
+                index_website = index
+                link_news = namespace['get_all_link_new']()
+                
+                # kiểm tra link nào chưa xử lý
+                for link in link_news:
+                    if not check_link_exists(link):
+                        current_link = link
+                        break
+                
+                if current_link is not None:
                     break
 
             print(current_link)
@@ -92,7 +104,9 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 raise Exception("Lỗi xảy ra, không tồn tại link hoặc đã hết tin tức")
 
             # lấy thông tin tin tức
-            new_info = website['get_info'](current_link)
+            namespace = {}
+            exec(data_websites[index_website]['func2'], globals(), namespace)
+            new_info = namespace['get_info_new'](current_link)
             if new_info is None:
                 raise Exception("Lỗi xảy ra, không có thông tin của content")
 
@@ -217,14 +231,20 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             title_slug = slugify(title)
             os.rename(f"{path_folder}/result.mkv", f"{path_folder}/{title_slug}.mkv")
             upload_yt(
-                f"./youtubes/{data_by_ip['youtubes'][0]}",
+                f"./youtubes/{data_by_ip['youtubes'][index_youtube]}",
                 title,
                 description,
                 tags,
                 os.path.abspath(f"{path_folder}/{title_slug}.mkv"),
                 os.path.abspath(f"{path_folder}/thumbnail.jpg"),
             )
-            time.sleep(60 * 15)
+            if data_by_ip['youtubes'][index_youtube].__len__() > 1:
+                index_youtube += 1
+                if(data_by_ip['youtubes'][index_youtube].__len__() <= index_youtube):
+                    index_youtube = 0
+                time.sleep(60 * 10)
+            else:
+                time.sleep(60 * 15)
             print('Tiếp tục...')
         except Exception as e:
             message = str(e)

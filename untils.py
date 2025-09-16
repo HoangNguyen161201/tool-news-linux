@@ -33,7 +33,10 @@ from db_mongodb import get_webiste
 from datetime import datetime, timedelta
 from moviepy import ImageClip, VideoFileClip, concatenate_videoclips, CompositeVideoClip, AudioFileClip, TextClip, concatenate_audioclips
 import numpy as np
+import inspect
 
+def func_to_string(func):
+    return inspect.getsource(func)
 
 # get link in news website -------------------------------------------------------------------------------------
 # kenh14 star---
@@ -232,33 +235,6 @@ def get_info_new_aljazeera(url):
         }
     except:
       return None
-
-def get_func_Website_to_create():
-    data = [
-        {
-            "name": 'kenh14.vn-star',
-            "get_links": get_all_link_in_kenh14_star_new,
-            "get_info": get_info_new_kenh14_star
-        },
-        # {
-        #     "name": 'theguardian',
-        #     "get_links": get_all_link_in_theguardian_new,
-        #     "get_info": get_info_new_theguardian
-        # },
-        # {
-        #     "name": 'aljazeera',
-        #     "get_links": get_all_link_in_aljazeera_new,
-        #     "get_info": get_info_new_aljazeera
-        # }
-    ]
-    website = None
-    for item in data:
-        data = get_webiste(item['name'])
-        if True:
-        # if data is None or data['timestamp'] < (datetime.now() - timedelta(minutes=20)):
-            website = item
-            break
-    return website
         
 
 # ----------------------------- ------------------------------------------
@@ -1592,4 +1568,3 @@ def check_identity_verification(name_chrome_yt):
     browser.quit()
     
 
-    

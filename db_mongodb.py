@@ -133,6 +133,7 @@ def remove_gemini_key_youtube_to_ip(key):
     )
     
 
-   
-
-    
+def get_func_to_get_link():
+    collect = get_collect('news', 'func_vn')
+    data =  collect.find({}, {})
+    return list(data)
