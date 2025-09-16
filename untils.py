@@ -1255,26 +1255,24 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
 
     # enter hiển thị thêm
     # Đợi cho phần tử scrollable-content xuất hiện
-    scrollable_element = WebDriverWait(browser, 10).until(
+    scrollable_element = WebDriverWait(browser, 100).until(
         EC.presence_of_element_located((By.ID, "scrollable-content"))
     )
     # Scroll xuống cuối cùng của phần tử scrollable-content
     browser.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight);", scrollable_element)
     time.sleep(2)
 
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 100).until(
         EC.presence_of_all_elements_located((By.ID, 'toggle-button'))
     )
     show_more_btn = browser.find_element(By.ID, 'toggle-button')
     show_more_btn.click()
     time.sleep(2)
     
-    print('nguyen quang hoang')
-    time.sleep(10000)
 
     # enter tags
     print('nhập tags in youtube')
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 100).until(
         EC.presence_of_all_elements_located((By.ID, 'text-input'))
     )
     tags_input = browser.find_element(By.ID, 'text-input')
@@ -1283,7 +1281,7 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
 
     # next btn
     browser.find_element(By.ID, 'next-button').click()
-    time.sleep(2)
+    time.sleep(10)
 
     # # add end screens
     # WebDriverWait(browser, 10).until(
@@ -1300,8 +1298,8 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     # time.sleep(4)
 
     # next
-    WebDriverWait(browser, 10).until(
-        EC.presence_of_all_elements_located((By.ID, 'next-button'))
+    WebDriverWait(browser, 100).until(
+        EC.element_to_be_clickable((By.ID, 'next-button'))
     )
     browser.find_element(By.ID, 'next-button').click()
     time.sleep(2)
@@ -1321,8 +1319,8 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
 
     # done
     print('upload video in youtube thành công')
-    WebDriverWait(browser, 10).until(
-        EC.presence_of_all_elements_located((By.ID, 'done-button'))
+    WebDriverWait(browser, 100).until(
+        EC.element_to_be_clickable((By.ID, 'done-button'))
     )
     browser.find_element(By.ID, 'done-button').click()
 
