@@ -1010,8 +1010,8 @@ def add_thumbnail_to_video(input_video, input_image, output_video):
     subprocess.run(cmd, check=True)
     
 def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
-    if short_link_path is not None:
-        add_thumbnail_to_video(short_link_path, './videos/thumbnail.jpg',short_link_out_path)
+    # if short_link_path is not None:
+    #     add_thumbnail_to_video(short_link_path, './videos/thumbnail.jpg',short_link_out_path)
         
     # Load âm thanh
     audio_duration = get_media_duration(audio_out_path)
@@ -1066,8 +1066,8 @@ def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_pat
     # nối intro với video
     with open(list_file, "w", encoding="utf-8") as f:
         f.write(f"file '{os.path.abspath(intro_path)}'\n")
-        if short_link_path is not None:
-            f.write(f"file '{os.path.abspath(short_link_out_path)}'\n")
+        # if short_link_path is not None:
+        #     f.write(f"file '{os.path.abspath(short_link_out_path)}'\n")
         f.write(f"file '{os.path.abspath(draf_out_path_3)}'\n")
 
     command = [
