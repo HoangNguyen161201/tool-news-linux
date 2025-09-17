@@ -989,29 +989,37 @@ def generate_to_voice_edge(content: str, output_path: str, voice: str = "en-US-A
     asyncio.run(_run())
 
 # concat video by ffmpeg ----------------------------------------------
-def add_thumbnail_to_video(input_video, input_image, output_video):
+def add_thumbnail_to_video(input_video, input_image, output_image, output_video):
     # Kích thước mong muốn
     width = 177
     height = 85
     bottom_margin = 40
     right_margin = 27
+    
+    img = Image.open(input_image)
+    img = img.resize((width, height))
+    img.save(output_image)
 
     # Lệnh ffmpeg
     cmd = [
         "ffmpeg",
-        "-i", input_video,        # video gốc
-        "-i", input_image,        # ảnh cần chèn
+        "-i", input_video,
+        "-i", output_image,
         "-filter_complex",
-        f"[1:v]scale={width}:{height}[img];[0:v][img]overlay=W-w-{right_margin}:H-h-{bottom_margin}",
-        "-codec:a", "copy",       # giữ nguyên audio
+        f"[0:v][1:v]overlay=W-w-{right_margin}:H-h-{bottom_margin}",
+        "-c:v", "libx264",
+        "-preset", "ultrafast",
+        "-crf", "28",
+        "-c:a", "copy",
         output_video
     ]
 
     subprocess.run(cmd, check=True)
     
 def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_path, audio_out_path, video_path_list, out_path, draf_out_path, draf_out_path_2, draf_out_path_3):
-    # if short_link_path is not None:
-    #     add_thumbnail_to_video(short_link_path, './videos/thumbnail.jpg',short_link_out_path)
+    if short_link_path is not None:
+        print('tạo thumb trong ad')
+        add_thumbnail_to_video(short_link_path, './videos/thumbnail.jpg', './videos/thumbnail-tiny.jpg', short_link_out_path)
         
     # Load âm thanh
     audio_duration = get_media_duration(audio_out_path)
@@ -1066,8 +1074,8 @@ def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_pat
     # nối intro với video
     with open(list_file, "w", encoding="utf-8") as f:
         f.write(f"file '{os.path.abspath(intro_path)}'\n")
-        # if short_link_path is not None:
-        #     f.write(f"file '{os.path.abspath(short_link_out_path)}'\n")
+        if short_link_path is not None:
+            f.write(f"file '{os.path.abspath(short_link_out_path)}'\n")
         f.write(f"file '{os.path.abspath(draf_out_path_3)}'\n")
 
     command = [
