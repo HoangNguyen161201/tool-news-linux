@@ -3,6 +3,13 @@ from pymongo.server_api import ServerApi
 from datetime import datetime
 import socket
 
+def getIp():
+    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    s.connect(("2001:4860:4860::8888", 80, 0, 0))  # Google DNS IPv6
+    local_ip = s.getsockname()[0]
+    s.close()
+    return local_ip
+
 # -----connect db and return collect
 def get_collect(name_db, name_collection):
     uri = "mongodb+srv://hoangdev161201:Cuem161201@cluster0.3o8ba2h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
@@ -60,8 +67,7 @@ def insert_or_update_website(name):
         
 # --------------------------------- ips
 def check_not_exist_to_create_ip():
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     data = collection.find_one({"ip": local_ip})
 
@@ -75,8 +81,7 @@ def check_not_exist_to_create_ip():
 
     
 def find_one_ip():
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     return collection.find_one({"ip": local_ip})
 
@@ -88,8 +93,7 @@ def check_exist_youtube_in_ip(name_chrome_yt):
 
    
 def update_driver_path_to_ip(driver_path):
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
@@ -97,8 +101,7 @@ def update_driver_path_to_ip(driver_path):
     )
     
 def add_youtube_to_ip(name_chrome_yt):
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
@@ -106,8 +109,7 @@ def add_youtube_to_ip(name_chrome_yt):
     )
     
 def remove_youtube_to_ip(name_chrome_yt):
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
@@ -115,8 +117,7 @@ def remove_youtube_to_ip(name_chrome_yt):
     )
    
 def add_gemini_key_to_ip(key):
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
@@ -124,8 +125,7 @@ def add_gemini_key_to_ip(key):
     )
     
 def remove_gemini_key_youtube_to_ip(key):
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
+    local_ip = getIp()
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
