@@ -1243,8 +1243,20 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
     WebDriverWait(browser, 100).until(
         EC.presence_of_all_elements_located((By.ID, 'textbox'))
     )
+    
     title_input = browser.find_element(By.ID, 'textbox')
-    title_input.clear()
+    
+    
+    check_clean_title = False
+    while check_clean_title is False:
+        # Xoá bằng Ctrl+A + Delete
+        title_input.send_keys(Keys.CONTROL, "a")
+        title_input.send_keys(Keys.DELETE)
+        title_input.clear()
+        time.sleep(1)
+        if title_input.text.strip() == "":
+            check_clean_title = True
+            
     time.sleep(1)
     title_input.send_keys(title)
     time.sleep(1)
