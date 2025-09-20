@@ -191,7 +191,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                     f"{path_folder}/result.txt",
                     [
                         new_info['title'],
-                        f"tin tức,{new_info['tags']},tin tuc,tin tức 24h,showbiz,scandal,tin tuc giai tri,tin giai tri,tin the gioi,",
+                        f"tin hot,{new_info['tags']},tin nóng,tin tức mỗi ngày,",
                         f"[Nguồn: {data_websites[index_website]['name']}] {new_info['description']}\n\n{ad['des']}\n\n(tags):\n{', '.join(new_info['tags'].split(','))}"
                     ]
                 )
