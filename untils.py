@@ -34,6 +34,9 @@ from datetime import datetime, timedelta
 from moviepy import ImageClip, VideoFileClip, concatenate_videoclips, CompositeVideoClip, AudioFileClip, TextClip, concatenate_audioclips
 import numpy as np
 import inspect
+import xml.etree.ElementTree as ET
+from db_mongodb import get_all_sitemap_links 
+from itertools import zip_longest
 
 def func_to_string(func):
     return inspect.getsource(func)
@@ -1610,3 +1613,31 @@ def check_identity_verification(name_chrome_yt):
     browser.quit()
     
 
+def get_link_in_sitemap(data):
+    # tải sitemap
+    response = requests.get(data['link'])
+    response.raise_for_status()  # báo lỗi nếu request fail
+
+    # parse xml
+    root = ET.fromstring(response.content)
+
+    # namespace trong file XML (thường có trong <urlset>)
+    namespace = {"ns": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+
+    # lấy toàn bộ <loc>
+    links = [{'link': loc.text, 'name': data['name']} for loc in root.findall(".//ns:loc", namespace)]
+    return links
+
+def get_links_get_content():
+    data = get_all_sitemap_links(True)
+    all_links = []
+    for sitemap_url in data:
+        links = get_link_in_sitemap(sitemap_url)
+        all_links.append(links)
+    
+    merged = []
+    for group in zip_longest(*all_links):  # group sẽ là tuple (link1_site1, link1_site2, link1_site3, ...)
+        for link in group:
+            if link:  # tránh None khi list ngắn hơn
+                merged.append(link)
+    return merged

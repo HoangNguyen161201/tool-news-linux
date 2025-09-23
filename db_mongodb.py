@@ -133,7 +133,57 @@ def remove_gemini_key_youtube_to_ip(key):
     )
     
 
-def get_func_to_get_link():
+def get_func_to_get_info_new():
     collect = get_collect('news', 'func_vn')
     data =  collect.find({}, {})
     return list(data)
+
+
+def check_link_sitemap_exists(link):
+    collection = get_collect('news', 'link_sitemap_vn')
+    return collection.find_one({"link": link}) is not None
+    
+
+def insert_sitemap_link(name, link):
+    collection = get_collect('news', 'link_sitemap_vn')
+    collection.insert_one({"link": link, "name": name})
+
+def delete_sitemap_link(link):
+    collection = get_collect('news', 'link_sitemap_vn')
+    collection.delete_one({"link": link})
+    
+def get_all_sitemap_links(is_get_name = False):
+    collection = get_collect('news', 'link_sitemap_vn')
+    # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
+    links = [doc["link"] if is_get_name is False else {
+        "link": doc["link"],
+        "name": doc["name"]
+        } for doc in collection.find({}, {"link": 1, "name": 1, "_id": 0})]
+    return links
+
+def get_times():
+    collection = get_collect('news', 'times')
+    # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
+    times =  collection.find({}, {})
+    return list(times)
+
+def insert_time(time1, time2, time3):
+    collection = get_collect('news', 'times')
+    # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
+    collection.insert_one({
+        "time1": time1,
+        "time2": time2,
+        "time3": time3
+    })
+    
+def update_time(id, time1, time2, time3):
+    collection = get_collect('news', 'times')
+    # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
+    collection.update_one({"_id": id}, {
+        "$set": {
+            "time1": time1,
+            "time2": time2,
+            "time3": time3
+        }
+    })
+    

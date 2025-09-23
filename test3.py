@@ -67,7 +67,7 @@ from bs4 import BeautifulSoup
 #     except:
 #       return None
 
-# func = func_to_string(get_all_link_new)
+# func = func_to_string(get_all_link_new) 
 # func2 = func_to_string(get_info_new)
 
 collect = get_collect('news', 'func_vn')
