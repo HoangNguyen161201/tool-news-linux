@@ -264,7 +264,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 print(f"[LỖI KHÁC] {message}")
                 gemini_model_index += 1
                 if gemini_model_index > models.__len__() - 1:
-                    gemini_key_index = 0
+                    gemini_model_index = 0
                     gemini_key_index += 1
                     if gemini_key_index > data_by_ip['geminiKeys'].__len__() - 1:
                         gemini_key_index = 0
