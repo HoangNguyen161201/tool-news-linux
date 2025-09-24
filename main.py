@@ -155,7 +155,8 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 new_info['content'] = result2
                 new_info['title_slug'] = slugify(new_info['title'])
                 
-
+            print(new_info)
+            time.sleep(10000)
             # if products is None:
             #     raise Exception("Lỗi xảy ra, không thể tạo và lấy ra 3 product ngẫu nhiên")
             

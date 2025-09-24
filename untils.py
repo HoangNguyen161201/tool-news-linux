@@ -817,7 +817,7 @@ def generate_title_description_improved(title, description, gemini_key = None, m
                                     - description: {description}
                                     hãy generate lại các thông tin trên cho tôi bằng tiếng việt sao cho hay và nổi bật, chuẩn seo youtube.
                                     Trả ra dưới định dạng như sau:
-                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có các dấu ký hiệu đặt biệt trong title).
+                                    Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có các dấu ký hiệu đặt biệt trong title, không có chứa 'dòng 1:').
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
                                     api_key= gemini_key,
