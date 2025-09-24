@@ -810,7 +810,7 @@ def generate_content(content, model='gemini-1.5-flash', api_key = None):
     response = model.generate_content(content)
     return response.text
 
-def generate_title_description_improved(title, description, gemini_key = None):
+def generate_title_description_improved(title, description, gemini_key = None, model = None):
     while True:
         title_des = generate_content(f'''tôi đang có các thông tin như sau:
                                     - title: {title}
@@ -820,7 +820,8 @@ def generate_title_description_improved(title, description, gemini_key = None):
                                     Dòng 1: là title (trên 50 ký tự và không quá 100 ký tự, không được có các dấu ký hiệu đặt biệt trong title).
                                     Từ dòng thứ 2 trở đi: là description. 
                                     Trả ra kết quả cho tôi luôn, không cần phải giải thích hay ghi thêm gì hết.''',
-                                    api_key= gemini_key
+                                    api_key= gemini_key,
+                                    model= model
                         )
         
         lines = title_des.splitlines()
@@ -834,7 +835,7 @@ def generate_title_description_improved(title, description, gemini_key = None):
             }
 
 # tạo lại nội dung content
-def generate_content_improved(content, title, gemini_key = None):
+def generate_content_improved(content, title, gemini_key = None, model = None):
     return generate_content(f'''
         Tôi có một bản tin mới. Hãy viết lại bằng tiếng việt sao cho hấp dẫn, súc tích và phù hợp để đọc lên trong một video tin tức trên YouTube (voice-over). Nội dung cần được viết dưới dạng khách quan ở ngôi thứ ba, không dùng tôi, của tôi, chúng ta, hay bất kỳ đại từ ngôi thứ nhất nào.
         title là: {title},
@@ -846,7 +847,7 @@ def generate_content_improved(content, title, gemini_key = None):
         - Viết thành một đoạn văn liền mạch, không chia cảnh, không dùng markdown, không có dấu *, **, hoặc [Scene:].
         - Phong cách giống người dẫn bản tin truyền hình, mang tính tường thuật khách quan nhưng thu hút, gây tò mò và khơi gợi cảm xúc.
         - Không thêm bất kỳ lời giải thích nào. Chỉ trả về nội dung đã viết lại.
-        ''', api_key= gemini_key)
+        ''', api_key= gemini_key, model= model)
         
         
 def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):

@@ -1,10 +1,10 @@
 import shutil
 import os
 from untils import get_links_get_content, write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
-from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content_improved
+from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content, generate_content_improved
 from untils import get_link_in_sitemap, upload_yt, generate_to_voice_edge, generate_thumbnail, generate_thumbnail_moviepy_c2, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
 from untils import check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
-from db_mongodb import update_time, insert_time, get_times, get_all_sitemap_links, insert_sitemap_link, delete_sitemap_link, get_func_to_get_info_new, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
+from db_mongodb import get_all_models, insert_model, delete_model, update_time, insert_time, get_times, get_all_sitemap_links, insert_sitemap_link, delete_sitemap_link, get_func_to_get_info_new, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
 # from slugify import slugify
@@ -59,11 +59,13 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
 def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = False):
     index_youtube = 0
     gemini_key_index = 0
+    gemini_model_index = 0
     current_link = None
     while True:
         # lấy data
         data_by_ip = find_one_ip()
         times = get_times()
+        models = get_all_models()
         
         # check authorization
         is_authorization = check_authorization()
@@ -122,8 +124,8 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                     
             # chạy song song các task: xử lý title/desc, content, ảnh aff, video từng ảnh
             with ThreadPoolExecutor(max_workers=6) as executor:
-                future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'], data_by_ip['geminiKeys'][gemini_key_index])
-                future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'], data_by_ip['geminiKeys'][gemini_key_index])
+                future1 = executor.submit(generate_title_description_improved, new_info['title'], new_info['description'], data_by_ip['geminiKeys'][gemini_key_index], models[gemini_model_index])
+                future2 = executor.submit(generate_content_improved, new_info['content'], new_info['title'], data_by_ip['geminiKeys'][gemini_key_index],  models[gemini_model_index])
                 # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item)
                 # future3 = executor.submit(generate_image_and_video_aff_and_get_three_item_amazon)
                 
@@ -260,9 +262,16 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 print(f"Lỗi xảy ra, không có thông tin của content")
             else:
                 print(f"[LỖI KHÁC] {message}")
-                gemini_key_index += 1
-                if gemini_key_index > data_by_ip['geminiKeys'].__len__() - 1:
+                gemini_model_index += 1
+                if gemini_model_index > models.__len__() - 1:
                     gemini_key_index = 0
+                    gemini_key_index += 1
+                    if gemini_key_index > data_by_ip['geminiKeys'].__len__() - 1:
+                        gemini_key_index = 0
+                print('Cập nhật model và key của gemini')
+                print(f'Model của bạn là: {models[gemini_model_index]}')
+                print(f'key của bạn là: {data_by_ip['geminiKeys'][gemini_key_index]}')
+                
                 time.sleep(60)
 
 if __name__ == "__main__":
@@ -337,6 +346,7 @@ if __name__ == "__main__":
         elif func == 2:
             while func == 2:
                 data = find_one_ip()
+                models = get_all_models()
                 print('|-----------------------------------------------|')
                 print('|---    Chỉnh sửa danh sách gemini keys     ----|')
                 print('|- DANH SÁCH GEMINI KEYS:                -------|')
@@ -344,15 +354,23 @@ if __name__ == "__main__":
                     print(data['geminiKeys'])
                 else:    
                     print('Trống vui lòng thêm gemini key mới')
+                print('|- DANH SÁCH GEMINI MODEL:               -------|')
+                if(models is not None and models.__len__() > 0):
+                    print(models)
+                else:    
+                    print('Trống vui lòng thêm model mới')
                 print('|-0. Quay lại                            -------|')
                 print('|-1. Thêm key mới (nhập 1-key)           -------|')
                 print('|-2. Xóa key (nhập 2-key)                -------|')
+                print('|-3. Thêm model (nhập 3-model, toàn bộ vps)   --|')
+                print('|-4. xóa model (nhập 4-model, toàn bộ vps)    --|')
+                print('|-5. xem các models trong gemini              --|')
+                print('|-6. test chạy key (nhập 6-key)               --|')
+                print('|-7. test chạy (nhập 7-model)                 --|')
                 print('|- Lưu ý: key ghi liền mạch không cách   -------|')
                 func2 = input("Nhập chọn chức năng: ")
                 
-                if (' ' in func2):
-                    print('lỗi cú pháp, không được chứa dấu cách')
-                elif func2 == 0 or func2 == '0':
+                if func2 == 0 or func2 == '0':
                     func= 'exit' 
                 elif func2.startswith("1-"):
                     text = func2[2:]
@@ -366,6 +384,42 @@ if __name__ == "__main__":
                         remove_gemini_key_youtube_to_ip(text)
                     else:
                         print('Không thể xóa vì chưa tồn tại key này')
+                elif func2.startswith("3-"):
+                    text = func2[2:]
+                    if(models is not None and text in models):
+                        print('đã tồn tại model này rồi')
+                    else:
+                        insert_model(text)
+             
+                elif func2.startswith("4-"):
+                    text = func2[2:]
+                    if(models is not None and text in models):
+                        delete_model(text)
+                    else:
+                        print('Không thể xóa vì chưa tồn tại model này')
+                elif func2.startswith("5"):
+                    if(data.get('geminiKeys') is not None and data['geminiKeys'].__len__() > 0):
+                        import google.generativeai as genai
+                        genai.configure(api_key=data['geminiKeys'][0])
+                        models = genai.list_models()
+                        for m in models:
+                            if 'generateContent' in m.supported_generation_methods:
+                                print(m.name, m.description, m.supported_generation_methods)
+                    else:
+                        print('chưa có key để search model')
+                    
+        
+                elif func2.startswith("6-"):
+                    text = func2[2:]
+                    data = generate_content("hãy tạo ra 1 câu truyện cổ tích", api_key= text)
+                    print(data)
+                elif func2.startswith("7-"):
+                    if(data.get('geminiKeys') is not None and data['geminiKeys'].__len__() > 0):
+                        text = func2[2:]
+                        data = generate_content("hãy tạo ra 1 câu truyện cổ tích", model= text, api_key= data['geminiKeys'][0])
+                        print(data)
+                    else:
+                        print('chưa có key để test model')
                         
         elif func == 4:
             while func == 4:

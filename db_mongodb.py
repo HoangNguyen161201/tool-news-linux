@@ -187,3 +187,22 @@ def update_time(id, time1, time2, time3):
         }
     })
     
+    
+def get_all_models():
+    collection = get_collect('news', 'models')
+    # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
+    models = [doc["model"] for doc in collection.find({}, {"model": 1, "_id": 0})]
+    return models
+
+def check_model_exists(model):
+    collection = get_collect('news', 'models')
+    return collection.find_one({"model": model}) is not None
+    
+
+def insert_model(model):
+    collection = get_collect('news', 'models')
+    collection.insert_one({"model": model})
+
+def delete_model(model):
+    collection = get_collect('news', 'models')
+    collection.delete_one({"model": model})
