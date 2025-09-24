@@ -6,11 +6,11 @@ person_img_paths = ['./public/persons/person_1.png', './public/persons/person_2.
 data_ad = [
     {
         "video": './public/ad_student.mkv',
-        "des": "👉 Truy cập link khách hàng đang quảng cáo:\n-Học tại nhà: https://daythem.com/hoc-tai-nha\n-Học trực tuyến: https://daythem.com/hoc-truc-tuyen\n✨ Liên hệ chạy quảng cáo youtube giá rẻ: 01hotchannel@gmail.com"
+        "des": "👉 Truy cập link khách hàng đang quảng cáo:\n-Học tại nhà: https://daythem.com/hoc-tai-nha\n-Học trực tuyến: https://daythem.com/hoc-truc-tuyen\n✨ Liên hệ chạy quảng cáo youtube giá rẻ: yt-hotchannel@gmail.com"
     },
     {
         "video": './public/ad_teacher.mkv',
-        "des": "👉 Truy cập link khách hàng đang quảng cáo:\n-Dạy tại nhà: https://daythem.com/day-tai-nha\n-Dạy trực tuyến: https://daythem.com/day-truc-tuyen\n✨ Liên hệ chạy quảng cáo youtube giá rẻ: 01hotchannel@gmail.com"
+        "des": "👉 Truy cập link khách hàng đang quảng cáo:\n-Dạy tại nhà: https://daythem.com/day-tai-nha\n-Dạy trực tuyến: https://daythem.com/day-truc-tuyen\n✨ Liên hệ chạy quảng cáo youtube giá rẻ: yt-hotchannel@gmail.com"
     },
 ]
 
