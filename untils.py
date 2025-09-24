@@ -1642,3 +1642,13 @@ def get_links_get_content():
             if link:  # tránh None khi list ngắn hơn
                 merged.append(link)
     return merged
+
+def clear_cache_chrome(yt_path):
+    paths = ['/Default/Cache', '/Default/GPUCache', '/ShaderCache', '/Default/Code Cache', '/GrShaderCache']
+    for item in paths:
+        try:
+            shutil.rmtree(f'{yt_path}{item}')
+            print(f'đã xóa cache {item}')
+        except:
+            print(f'Đã xóa folder hoặc không tồn tại folder {item}')
+    
