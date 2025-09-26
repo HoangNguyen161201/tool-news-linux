@@ -295,8 +295,6 @@ def generate_video_by_image_ffmpeg( in_path, out_path, second, is_set_avatar = T
     width, height = 1920, 1080
     duration = second
     os.makedirs('./temp', exist_ok=True)
-    
-    print('nguyen quang hoang')
 
     cmd = [
         "ffmpeg",

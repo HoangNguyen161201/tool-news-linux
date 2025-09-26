@@ -4,11 +4,22 @@ from datetime import datetime
 import socket
 
 def getIp():
-    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    s.connect(("2001:4860:4860::8888", 80, 0, 0))  # Google DNS IPv6
-    local_ip = s.getsockname()[0]
-    s.close()
-    return local_ip
+    try:
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        s.connect(("2001:4860:4860::8888", 80, 0, 0))  # Google DNS IPv6
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))   # không cần gửi data, chỉ để lấy local ip
+            ip = s.getsockname()[0]
+        except Exception:
+            ip = "127.0.0.1"  # fallback
+        finally:
+            s.close()
+        return ip
 
 # -----connect db and return collect
 def get_collect(name_db, name_collection):

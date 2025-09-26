@@ -15,7 +15,7 @@ from data import data_ad
 import requests
 from bs4 import BeautifulSoup
 
-def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif_path = None):
+def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif_path = None, is_delete = False):
     img_path = f"{path_folder}/image-{key}.jpg"
     img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
     
@@ -52,6 +52,11 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
             f'{path_folder}/video-{key}.mkv',
             random_number,
         )
+        
+        if is_delete:
+            for file_path in [img_path, img_blur_path, f"{path_folder}/image-{key}.mkv", f"{path_folder}/image-blur-{key}.mkv"]:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
 
         return f"{path_folder}/video-{key}.mkv"
     
@@ -60,6 +65,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
     index_youtube = 0
     gemini_key_index = 0
     gemini_model_index = 0
+    index_get_link = 0
     current_link = None
     while True:
         # lấy data
@@ -122,7 +128,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             # not run parallel create child --------------------------------------------------------------------------------
             if is_not_run_parallel_create_child_video is True:
                 for key, link in enumerate(new_info['picture_links']):
-                    link_child_video = create_video_by_image(path_folder, key, link, type_run_video, person_info['person_gif_path'])
+                    link_child_video = create_video_by_image(path_folder, key, link, type_run_video, person_info['person_gif_path'], True if key > 0 else False)
                     path_videos.append(link_child_video)
                     
             # chạy song song các task: xử lý title/desc, content, ảnh aff, video từng ảnh
