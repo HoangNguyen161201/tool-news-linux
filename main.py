@@ -65,7 +65,6 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
     index_youtube = 0
     gemini_key_index = 0
     gemini_model_index = 0
-    index_get_link = 0
     current_link = None
     while True:
         # lấy data
