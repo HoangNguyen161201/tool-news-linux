@@ -1204,11 +1204,10 @@ def upload_yt( user_data_dir, title, description, tags, video_path, video_thumbn
 
     browser.get("https://studio.youtube.com/")
     # await browser load end
-    WebDriverWait(browser, 100).until(
-        EC.element_to_be_clickable((By.ID, 'create-icon'))
+    element = WebDriverWait(browser, 100).until(
+        EC.element_to_be_clickable((By.XPATH, '//ytcp-button[@icon="yt-sys-icons:video_call"]'))
     )
-
-    browser.find_element(By.ID, 'create-icon').click()
+    element.click()
     time.sleep(1)
 
 
@@ -1571,12 +1570,10 @@ def check_identity_verification(name_chrome_yt):
 
         browser.get("https://studio.youtube.com/")
         # await browser load end
-        WebDriverWait(browser, 100).until(
-            EC.element_to_be_clickable((By.ID, 'create-icon'))
+        element = WebDriverWait(browser, 100).until(
+            EC.element_to_be_clickable((By.XPATH, '//ytcp-button[@icon="yt-sys-icons:video_call"]'))
         )
-
-
-        browser.find_element(By.ID, 'create-icon').click()
+        element.click()
         time.sleep(1)
 
         WebDriverWait(browser, 100).until(
