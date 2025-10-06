@@ -1160,7 +1160,9 @@ def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_pat
     # cắt đúng duration và gắn âm thanh
     import_audio_to_video(draf_out_path, draf_out_path_2,
                           audio_out_path, audio_duration)
+    os.remove(draf_out_path)
     normalize_video(draf_out_path_2, draf_out_path_3)
+    os.remove(draf_out_path_2)
 
     # nối intro với video
     with open(list_file, "w", encoding="utf-8") as f:
