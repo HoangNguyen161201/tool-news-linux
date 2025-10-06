@@ -61,7 +61,7 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
         return f"{path_folder}/video-{key}.mkv"
     
 
-def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = False):
+def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = False, is_not_check_yt = False):
     index_youtube = 0
     gemini_key_index = 0
     gemini_model_index = 0
@@ -235,14 +235,15 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 tags = lines[1].strip() if len(lines) >= 2 else ''
                 description = ''.join(lines[2:]).strip() if len(lines) >= 3 else ''
             title_slug = slugify(title)
-            os.rename(f"{path_folder}/result.mkv", f"{path_folder}/{title_slug}.mkv")
+            os.rename(f"{path_folder}/result.mp4", f"{path_folder}/{title_slug}.mp4")
             upload_yt(
                 f"./youtubes/{data_by_ip['youtubes'][index_youtube]}",
                 title,
                 description,
                 tags,
-                os.path.abspath(f"{path_folder}/{title_slug}.mkv"),
+                os.path.abspath(f"{path_folder}/{title_slug}.mp4"),
                 os.path.abspath(f"{path_folder}/thumbnail.jpg"),
+                is_not_wait_check= is_not_check_yt
             )
             if data_by_ip['youtubes'].__len__() > 1:
                 index_youtube += 1
@@ -545,7 +546,7 @@ if __name__ == "__main__":
             else:
                 # type: 'ffmpeg' 'moviepy' 'cv2'
                 type = 'cv2'
-                main(type, True) 
+                main(type, True)
         elif func == 0:
             is_exit = True
         else:
