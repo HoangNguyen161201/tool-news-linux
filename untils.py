@@ -1183,6 +1183,13 @@ def concat_content_videos_ffmpeg(intro_path, short_link_path, short_link_out_pat
     subprocess.run(command)
     os.remove(list_file)
     
+    folder = './videos'
+    for filename in os.listdir(folder):
+        if filename.endswith(".mkv") and filename != 'result.mkv':
+            path = os.path.join(folder, filename)
+            os.remove(path)
+            print(f"Đã xóa: {filename}")
+    
     mp4_out_path = out_path.replace(".mkv", ".mp4")
     convert_to_mp4(out_path, mp4_out_path)
 
