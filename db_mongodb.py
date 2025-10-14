@@ -2,15 +2,15 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from datetime import datetime
 import socket
-# import winreg
+import winreg
 
 def getIp():
-    # try:
-    #     key = r"SOFTWARE\Microsoft\Cryptography"
-    #     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key) as h:
-    #         guid, _ = winreg.QueryValueEx(h, "MachineGuid")
-    #         return str(guid)
-    # except Exception:
+    try:
+        key = r"SOFTWARE\Microsoft\Cryptography"
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key) as h:
+            guid, _ = winreg.QueryValueEx(h, "MachineGuid")
+            return str(guid)
+    except Exception:
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             s.connect(("2001:4860:4860::8888", 80, 0, 0))  # Google DNS IPv6
@@ -118,12 +118,15 @@ def update_driver_path_to_ip(driver_path):
         {"$set": {"driverPath": driver_path}}
     )
     
-def add_youtube_to_ip(name_chrome_yt):
+def add_youtube_to_ip(name_chrome_yt, decorate_path):
     local_ip = getIp()
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
-        {"$push": {"youtubes": name_chrome_yt}}
+        {"$push": {"youtubes": {
+            "name": name_chrome_yt,
+            "decorate_path": decorate_path
+        }}}
     )
     
 def remove_youtube_to_ip(name_chrome_yt):
@@ -131,7 +134,7 @@ def remove_youtube_to_ip(name_chrome_yt):
     collection = get_collect('news', 'ips')
     collection.update_one(
         {"ip": local_ip},
-        {"$pull": {"youtubes": name_chrome_yt}}
+        {"$pull": {"youtubes": {"name": name_chrome_yt}}}
     )
    
 def add_gemini_key_to_ip(key):
@@ -185,23 +188,25 @@ def get_times():
     times =  collection.find({}, {})
     return list(times)
 
-def insert_time(time1, time2, time3):
+def insert_time(time1, time2, time3, time4):
     collection = get_collect('news', 'times')
     # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
     collection.insert_one({
         "time1": time1,
         "time2": time2,
-        "time3": time3
+        "time3": time3,
+        "time4": time4
     })
     
-def update_time(id, time1, time2, time3):
+def update_time(id, time1, time2, time3, time4):
     collection = get_collect('news', 'times')
     # Truy vấn tất cả các tài liệu và chỉ lấy trường "link"
     collection.update_one({"_id": id}, {
         "$set": {
             "time1": time1,
             "time2": time2,
-            "time3": time3
+            "time3": time3,
+            "time4": time4,
         }
     })
     
@@ -224,3 +229,35 @@ def insert_model(model):
 def delete_model(model):
     collection = get_collect('news', 'models')
     collection.delete_one({"model": model})
+    
+def get_next_youtube(doc):
+    youtubes = doc.get("youtubes", [])
+    
+    now = datetime.now()
+    today = now.date()
+    
+    current_index = None
+    
+    for i, yt in enumerate(youtubes):
+        if "timeStart" in yt:
+            time_start = datetime.fromisoformat(yt['timeStart'])
+            
+            if time_start.date() == today:
+                return yt
+            else:
+                del yt['timeStart']
+                current_index = i
+                break
+            
+    if current_index is None:
+        next_index = 0
+    else:
+        next_index = (current_index + 1) % len(youtubes)
+    
+    youtubes[next_index]['timeStart']= now.isoformat()
+    doc["youtubes"] = youtubes
+    
+    collection = get_collect('news', 'ips')
+    collection.update_one({"_id": doc["_id"]}, {"$set": {"youtubes": youtubes}})
+    
+    return youtubes[next_index]

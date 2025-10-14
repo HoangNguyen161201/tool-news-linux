@@ -306,7 +306,7 @@ def generate_image_ffmpeg(link, out_path, out_blur_path, width=1920, height=1080
     cv2.imwrite(out_blur_path, blurred)
 
 
-def generate_video_by_image_ffmpeg(in_path, out_path, second, is_set_avatar=True):
+def generate_video_by_image_ffmpeg(in_path, out_path, second, avatar_path, is_set_avatar=True):
     width, height = 1920, 1080
     duration = second
     os.makedirs('./temp', exist_ok=True)
@@ -316,7 +316,7 @@ def generate_video_by_image_ffmpeg(in_path, out_path, second, is_set_avatar=True
         "-y",
         "-framerate", "1", "-loop", "1", "-t", str(duration), "-i", in_path,
         "-framerate", "1", "-loop", "1", "-t", str(
-            duration), "-i", './public/avatar2.png',
+            duration), "-i", avatar_path,
         "-filter_complex",
         f"""
         [0:v]scale={width}:{height},setsar=1,setpts=PTS-STARTPTS[bg]; \
@@ -438,7 +438,7 @@ def create_video_with_zoom_opencv(image_path, output_path, duration=5, zoom_fact
     out.release()
 
 
-def generate_video_by_image_cv2(zoom_in, in_path, blur_in_path, in_path_draft, blur_in_path_draft, out_path, second):
+def generate_video_by_image_cv2(zoom_in, in_path, blur_in_path, in_path_draft, blur_in_path_draft, out_path, second, avatar_path):
     create_video_with_zoom_opencv(
         blur_in_path, blur_in_path_draft, second, zoom_in=True if zoom_in is None else False)
     create_video_with_zoom_opencv(
@@ -449,7 +449,7 @@ def generate_video_by_image_cv2(zoom_in, in_path, blur_in_path, in_path_draft, b
         "-i", blur_in_path_draft,    # background video
         "-i", in_path,               # image
         "-i", in_path_draft,         # overlay video
-        "-i", "./public/avatar2.png",  # avatar image
+        "-i", avatar_path,  # avatar image
         "-filter_complex",
         "[1:v]scale=iw+50:ih+50[img_scaled];"
         "[0:v][img_scaled]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2[tmp1];"
@@ -532,7 +532,7 @@ def generate_image_moviepy(link, out_path, out_blur_path, width=None, height=Non
     cv2.imwrite(out_blur_path, blurred_image)
 
 
-def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, second, gif_path, is_short=False):
+def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, second, gif_path, avatar_path, is_short=False):
     clip_image = ImageClip(in_path).with_duration(second)
     clip_blurred_image = ImageClip(blur_in_path, duration=second).resized(
         (1080, 1920) if is_short else (1920, 1080))
@@ -569,7 +569,7 @@ def generate_video_by_image_moviepy(zoom_in, in_path, blur_in_path, out_path, se
     # gif = gif.subclipped(0, second)
 
     # Tạo avatar clip
-    avatar_clip = ImageClip('./public/avatar2.png').resized((200, 200))
+    avatar_clip = ImageClip(avatar_path).resized((200, 200))
     avatar_clip = avatar_clip.with_opacity(0.7)
     avatar_clip = avatar_clip.with_position((830 if is_short else 1650,  50))
 
@@ -896,7 +896,7 @@ def generate_content_improved(content, title, gemini_key=None, model=None):
         ''', api_key=gemini_key, model=model)
 
 
-def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
+def generate_thumbnail(img_path, img_person_path, bar_path, bg_path, draf_path, out_path, text):
     text = text.upper()
 
     # Mở ảnh thứ hai (ảnh nền phụ) và thay đổi kích thước
@@ -906,7 +906,7 @@ def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
     # Mở ảnh overlay (PNG trong suốt)
     overlay = Image.open(img_person_path)
     overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
-    overlay2 = Image.open('./public/bar-2.png')
+    overlay2 = Image.open(bar_path)
 
     # Đảm bảo ảnh overlay có kênh alpha
     if overlay.mode != 'RGBA':
@@ -973,7 +973,7 @@ def generate_thumbnail(img_path, img_person_path, draf_path, out_path, text):
 
     # lưu ảnh với bg
     jpg_image = Image.open(draf_path)
-    png_image = Image.open('./public/bg/bg-2.png')
+    png_image = Image.open(bg_path)
     png_image = png_image.convert("RGBA")
     jpg_image.paste(png_image, (0, 0), png_image)
     jpg_image.save(out_path)
@@ -1562,7 +1562,7 @@ def check_file_exists_on_vps(host, username, password, remote_path, port=22):
         return False
 
 
-def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, draf_path, out_path, text):
+def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, bar_path, bg_path, draf_path, out_path, text):
     text = text.upper()
     # Mở ảnh thứ nhất (ảnh nền chính)
     background = Image.open(img_path)
@@ -1580,7 +1580,7 @@ def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, draf
     if img_person_path is not None:
         overlay = Image.open(img_person_path)
         overlay = overlay.resize((int(1920 * 0.8), int(1080 * 0.8)))
-    overlay2 = Image.open('./public/bar-2.png')
+    overlay2 = Image.open(bar_path)
 
     # Đảm bảo ảnh overlay có kênh alpha
     if img_person_path is not None and overlay.mode != 'RGBA':
@@ -1653,7 +1653,7 @@ def generate_thumbnail_moviepy_c2(img_path, img_blur_path, img_person_path, draf
 
     # lưu ảnh với bg
     jpg_image = Image.open(draf_path)
-    png_image = Image.open('./public/bg/bg-2.png')
+    png_image = Image.open(bg_path)
     png_image = png_image.convert("RGBA")
     jpg_image.paste(png_image, (0, 0), png_image)
     jpg_image.save(out_path)

@@ -3,8 +3,8 @@ import os
 from untils import get_links_get_content, write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
 from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content, generate_content_improved
 from untils import get_link_in_sitemap, upload_yt, generate_to_voice_edge, generate_thumbnail, generate_thumbnail_moviepy_c2, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
-from untils import clear_cache_chrome, check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
-from db_mongodb import get_all_models, insert_model, delete_model, update_time, insert_time, get_times, get_all_sitemap_links, insert_sitemap_link, delete_sitemap_link, get_func_to_get_info_new, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
+from untils import get_media_duration, clear_cache_chrome, check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
+from db_mongodb import get_next_youtube, get_all_models, insert_model, delete_model, update_time, insert_time, get_times, get_all_sitemap_links, insert_sitemap_link, delete_sitemap_link, get_func_to_get_info_new, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
 # from slugify import slugify
@@ -14,8 +14,9 @@ import shutil
 from data import data_ad
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
-def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif_path = None, is_delete = False):
+def create_video_by_image(path_folder, key, link, avatar_path=None, type_run_video = 'ffmpeg', gif_path = None, is_delete = False):
     img_path = f"{path_folder}/image-{key}.jpg"
     img_blur_path = f"{path_folder}/image-blur-{key}.jpg"
     
@@ -25,7 +26,8 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
         generate_video_by_image_ffmpeg(
             img_path,
             f'{path_folder}/video-{key}.mkv',
-            random_number
+            random_number,
+            avatar_path
         )
         return f"{path_folder}/video-{key}.mkv"
     elif type_run_video == 'moviepy':
@@ -37,7 +39,8 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
             img_blur_path,
             f'{path_folder}/video-{key}.mp4',
             random_number,
-            gif_path
+            gif_path,
+            avatar_path
         )
         return f"{path_folder}/video-{key}.mp4"
     elif type_run_video == 'cv2':
@@ -51,6 +54,7 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
             f"{path_folder}/image-blur-{key}.mkv",
             f'{path_folder}/video-{key}.mkv',
             random_number,
+            avatar_path
         )
         
         if is_delete:
@@ -62,13 +66,13 @@ def create_video_by_image(path_folder, key, link, type_run_video = 'ffmpeg', gif
     
 
 def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = False, is_not_check_yt = False):
-    index_youtube = 0
     gemini_key_index = 0
     gemini_model_index = 0
     current_link = None
     while True:
         # lấy data
         data_by_ip = find_one_ip()
+        youtube = get_next_youtube(data_by_ip)
         times = get_times()
         models = get_all_models()
         
@@ -91,7 +95,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             os.makedirs(path_folder)
             
             # clear cache chrome
-            clear_cache_chrome(f"./youtubes/{data_by_ip['youtubes'][index_youtube]}")
+            clear_cache_chrome(f"./youtubes/{youtube['name']}")
 
             # lấy tất cả link tin tức
             links = get_links_get_content()
@@ -127,7 +131,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             # not run parallel create child --------------------------------------------------------------------------------
             if is_not_run_parallel_create_child_video is True:
                 for key, link in enumerate(new_info['picture_links']):
-                    link_child_video = create_video_by_image(path_folder, key, link, type_run_video, person_info['person_gif_path'], True if key > 0 else False)
+                    link_child_video = create_video_by_image(path_folder, key, link, f'{youtube['decorate_path']}/avatar.png', type_run_video, person_info['person_gif_path'], True if key > 0 else False)
                     path_videos.append(link_child_video)
                     
             # chạy song song các task: xử lý title/desc, content, ảnh aff, video từng ảnh
@@ -139,7 +143,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 
                 # not run parallel create child -----------------------------------------------------------------------------
                 future_videos = None if is_not_run_parallel_create_child_video is True else [
-                    executor.submit(create_video_by_image, path_folder, key, link, type_run_video, person_info['person_gif_path'])
+                    executor.submit(create_video_by_image, path_folder, key, link, f'{youtube['decorate_path']}/avatar.png', type_run_video, person_info['person_gif_path'])
                     for key, link in enumerate(new_info['picture_links'])
                 ]
 
@@ -173,6 +177,8 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                     generate_thumbnail,
                     f"{path_folder}/image-0.jpg",
                     person_info['person_img_path'],
+                    f'{youtube['decorate_path']}/bar.png',
+                    f'{youtube['decorate_path']}/bg.png',
                     f"{path_folder}/draf-thumbnail.jpg",
                     f"{path_folder}/thumbnail.jpg",
                     new_info['title'].replace('*', '')
@@ -181,6 +187,8 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                     f"{path_folder}/image-0.jpg",
                     f"{path_folder}/image-blur-0.jpg",
                     None,
+                    f'{youtube['decorate_path']}/bar.png',
+                    f'{youtube['decorate_path']}/bg.png',
                     f"{path_folder}/draf-thumbnail.jpg",
                     f"{path_folder}/thumbnail.jpg",
                     new_info['title'].replace('*', '')
@@ -222,6 +230,12 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 )
             elif type_run_video == 'moviepy':
                 concat_content_videos_moviepy(f"{path_folder}/content-voice.aac", path_videos, f"{path_folder}/result.mp4")
+                
+            # check duration
+            print('kiểm tra thời gian video có thể 2 phút')
+            result_duration = get_media_duration(f"{path_folder}/result.mkv")
+            if(result_duration <= 120):
+                raise Exception("Lỗi xảy ra, video không đủ độ dài tối thiểu")
 
             end_time = time.time()
             print(f"Thời gian chạy: {end_time - start_time:.2f} giây")
@@ -237,7 +251,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             title_slug = slugify(title)
             os.rename(f"{path_folder}/result.mp4", f"{path_folder}/{title_slug}.mp4")
             upload_yt(
-                f"./youtubes/{data_by_ip['youtubes'][index_youtube]}",
+                f"./youtubes/{youtube['name']}",
                 title,
                 description,
                 tags,
@@ -246,13 +260,14 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 is_not_wait_check= is_not_check_yt
             )
             if data_by_ip['youtubes'].__len__() > 1:
-                index_youtube += 1
-                if(data_by_ip['youtubes'].__len__() <= index_youtube):
-                    index_youtube = 0
-                print(f'chờ {times[0]['time3']} phút')
+                now = datetime.now()
+                new_time = now + timedelta(minutes=times[0]['time3'])
+                print(f'Thời gian đăng video tiếp theo: {new_time.strftime("%Y-%m-%d %H:%M:%S")}')
                 time.sleep(60 * times[0]['time3'])
             else:
-                print(f'chờ {times[0]['time2']} phút')
+                now = datetime.now()
+                new_time = now + timedelta(minutes=times[0]['time2'])
+                print(f'Thời gian đăng video tiếp theo: {new_time.strftime("%Y-%m-%d %H:%M:%S")}')
                 time.sleep(60 * times[0]['time2'])
             print('Tiếp tục...')
         except Exception as e:
@@ -268,6 +283,8 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             elif "Lỗi xảy ra, không có thông tin của content" in message:
                 insert_link(current_link)
                 print(f"Lỗi xảy ra, không có thông tin của content")
+            elif "Lỗi xảy ra, video không đủ độ dài tối thiểu" in message:
+                print(f"Lỗi xảy ra, video không đủ độ dài tối thiểu")
             else:
                 print(f"[LỖI KHÁC] {message}")
                 gemini_model_index += 1
@@ -322,14 +339,32 @@ if __name__ == "__main__":
                     func= 'exit' 
                 elif func1.startswith("1-"):
                     text = func1[2:]
-                    if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
+                    if (data.get('youtubes') is not None and any(item.get('name') == text for item in data.get("youtubes", []))):
                         print('đã tồn tại chrome youtube này rồi')
                     else:
-                        add_youtube_to_ip(text)
+                        index_decorate = None
+                        folder_decorate_path = './public/decorates'
+                        items = os.listdir(folder_decorate_path)
+                        folders = [f for f in items if os.path.isdir(
+                            os.path.join(folder_decorate_path, f))]
+                        
+                        while index_decorate is None:
+                            for index, folderName in enumerate(folders):
+                                print(f'{index}. {folderName}')
+
+                            index_decorate = int(
+                                input("nhập index để chọn decorate:"))
+                            if (index_decorate > folders.__len__() - 1):
+                                print('lỗi cú pháp, vui lòng nhập lại')
+                                index_decorate = None
+                        
+                        
+                        add_youtube_to_ip(
+                            text, f'./public/decorates/{folders[index_decorate]}')
                         open_chrome_to_edit(text, data.get('driverPath'))
                 elif func1.startswith("2-"):
                     text = func1[2:]
-                    if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
+                    if (data.get('youtubes') is not None and any(item.get('name') == text for item in data.get("youtubes", []))):
                         remove_youtube_to_ip(text)
                         try:
                             shutil.rmtree(f"./youtubes/{text}")
@@ -339,13 +374,13 @@ if __name__ == "__main__":
                         print('Không thể xóa vì chưa tồn tại chrome youtube này')
                 elif func1.startswith("3-"):
                     text = func1[2:]
-                    if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
+                    if (data.get('youtubes') is not None and any(item.get('name') == text for item in data.get("youtubes", []))):
                         open_chrome_to_edit(text, data.get('driverPath'))
                     else:
                         print('Chưa tồn tại trình duyệt này')
                 elif func1.startswith("4-"):
                     text = func1[2:]
-                    if(data.get('youtubes') is not None and text in data.get("youtubes", [])):
+                    if (data.get('youtubes') is not None and any(item.get('name') == text for item in data.get("youtubes", []))):
                         check_identity_verification(text)
                     else:
                         print('Chưa tồn tại trình duyệt này')
@@ -505,29 +540,32 @@ if __name__ == "__main__":
                     print(f'Thời gian đợi khi hết link: {data[0]['time1']} phút')
                     print(f'Thời gian đợi khi upload thành công nếu chỉ 1 kênh: {data[0]['time2']} phút')
                     print(f'Thời gian đợi khi upload thành công nếu có nhiều kênh: {data[0]['time3']} phút')
-    
+                    print(f'Thời gian nghỉ cuối ngày: {data[0]['time4']} phút')
+                    
                 print('|-1. thời gian đợi khi hết link, thời gian chờ -|')
                 print('| khi úp yt thành công nếu chỉ 1 kênh, thời    -|')
-                print('| gian khi úp yt thành công nếu có nhiều kênh  -|')
-                print('| (nhập 1-time1-time2-time3) (phút)            -|')
+                print('| gian khi úp yt thành công nếu có nhiều kênh, -|')
+                print('| thời gian nghỉ cuối ngày                   , -|')
+                print('| (nhập 1-time1-time2-time3-time4) (phút)      -|')
                 print('|-0. Quay lại                            -------|')
                 
                 func3 = input("Nhập chọn chức năng: ")
                 if func3 == 0 or func3 == '0':
-                    func= 'exit'
+                    func = 'exit'
                 elif func3.startswith("1-"):
                     arr = func3.split('-')
-                    if(arr.__len__() != 4):
+                    if (arr.__len__() != 5):
                         print('Không đúng cú pháp')
-                    elif not arr[1].isdigit() or not arr[2].isdigit() or not arr[3].isdigit():
+                    elif not arr[1].isdigit() or not arr[2].isdigit() or not arr[3].isdigit() or not arr[4].isdigit():
                         print('Không đúng cú pháp')
-                    elif int(arr[1]) <= 0 or int(arr[2]) <= 0 or int(arr[3]) <= 0:
+                    elif int(arr[1]) <= 0 or int(arr[2]) <= 0 or int(arr[3]) <= 0 or int(arr[4]) <= 0:
                         print('Thời gian không được nhỏ hơn hoặc bằng 0')
                     else:
-                        if(data.__len__() == 0):
-                            insert_time(int(arr[1]), int(arr[2]), int(arr[3]))
+                        if (data.__len__() == 0):
+                            insert_time(int(arr[1]), int(arr[2]), int(arr[3]), int(arr[4]))
                         else:
-                            update_time(data[0]['_id'], int(arr[1]), int(arr[2]), int(arr[3]))
+                            update_time(data[0]['_id'], int(
+                                arr[1]), int(arr[2]), int(arr[3]), int(arr[4]))
                         
                  
         elif func == 6:
