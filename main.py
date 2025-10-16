@@ -82,6 +82,15 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
             raise Exception("Lỗi xảy ra")
         
         try:
+             #kiểm tra cuối ngày hay chưa
+            print('kiểm tra đã cuối ngày chưa')
+            now = datetime.now()
+            end_of_day = datetime.combine(now.date(), datetime.max.time())
+            start_of_period = end_of_day - timedelta(minutes=times[0]['time4'])
+            
+            if now >= start_of_period:
+                raise Exception("Lỗi xảy ra, tới thời gian nghỉ")
+            
             start_time = time.time()
             current_link = None
             name = None
@@ -285,6 +294,19 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 print(f"Lỗi xảy ra, không có thông tin của content")
             elif "Lỗi xảy ra, video không đủ độ dài tối thiểu" in message:
                 print(f"Lỗi xảy ra, video không đủ độ dài tối thiểu")
+            elif "Lỗi xảy ra, tới thời gian nghỉ" in message:
+                print(f"Đã cuối ngày, vui lòng đợi tới ngày mới để đăng tiếp")
+                current_day = datetime.now().date()
+                while True:
+                    now = datetime.now()
+
+                    # Kiểm tra nếu sang ngày mới
+                    if now.date() != current_day:
+                        print("Đã sang ngày mới:", now.date())
+                        break
+
+                    print("Đợi qua ngày... ", now.strftime("%H:%M:%S"))
+                    time.sleep(5)
             else:
                 print(f"[LỖI KHÁC] {message}")
                 gemini_model_index += 1
