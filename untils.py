@@ -1780,3 +1780,79 @@ def clear_cache_chrome(yt_path):
             print(f'đã xóa cache {item}')
         except:
             print(f'Đã xóa folder hoặc không tồn tại folder {item}')
+
+
+def ensure_time_file(filename="time.txt"):
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    if not os.path.exists(filename):
+        with open(filename, "w", encoding="utf-8") as f:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"{now}\n")
+            f.write("20\n")
+            f.write("0\n")
+        return
+
+    with open(filename, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    while len(lines) < 3:
+        lines.append("\n")
+
+    first_line = lines[0].strip()
+    try:
+        file_date = datetime.strptime(first_line, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d")
+    except ValueError:
+        file_date = "" 
+
+    # So sánh ngày
+    if file_date != today_str:
+        lines[0] = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "\n"
+        lines[2] = "0\n"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    
+def get_time_info(filename="time.txt"):
+    if not os.path.exists(filename):
+        print(f"File '{filename}' chưa tồn tại, đang tạo mới...")
+        ensure_time_file(filename)
+
+    with open(filename, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f.readlines()]
+
+    while len(lines) < 3:
+        lines.append("")
+
+    time_str = lines[0] or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    value2 = int(lines[1]) if lines[1].isdigit() else 0
+    value3 = int(lines[2]) if lines[2].isdigit() else 0
+
+    return time_str, value2, value3
+
+
+def update_line_times(filename="time.txt", line_number=2, new_value=None, delta=None):
+    if line_number not in [2, 3]:
+        raise ValueError("Chỉ được cập nhật dòng 2 hoặc dòng 3")
+
+    ensure_time_file(filename)
+
+    with open(filename, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    while len(lines) < 3:
+        lines.append("\n")
+
+    current_value = 0
+    try:
+        current_value = int(lines[line_number - 1].strip())
+    except ValueError:
+        pass
+
+    if new_value is not None:
+        lines[line_number - 1] = f"{new_value}\n"
+    elif delta is not None:
+        lines[line_number - 1] = f"{current_value + delta}\n"
+    else:
+        raise ValueError("Phải truyền new_value hoặc delta")
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.writelines(lines)

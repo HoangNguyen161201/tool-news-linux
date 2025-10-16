@@ -3,7 +3,7 @@ import os
 from untils import get_links_get_content, write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
 from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content, generate_content_improved
 from untils import get_link_in_sitemap, upload_yt, generate_to_voice_edge, generate_thumbnail, generate_thumbnail_moviepy_c2, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
-from untils import get_media_duration, clear_cache_chrome, check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
+from untils import update_line_times, get_time_info, ensure_time_file, get_media_duration, clear_cache_chrome, check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
 from db_mongodb import get_next_youtube, get_all_models, insert_model, delete_model, update_time, insert_time, get_times, get_all_sitemap_links, insert_sitemap_link, delete_sitemap_link, get_func_to_get_info_new, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -15,6 +15,7 @@ from data import data_ad
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
+import sys
 
 def create_video_by_image(path_folder, key, link, avatar_path=None, type_run_video = 'ffmpeg', gif_path = None, is_delete = False):
     img_path = f"{path_folder}/image-{key}.jpg"
@@ -81,8 +82,14 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
         if is_authorization is False or is_authorization is False:
             raise Exception("Lỗi xảy ra")
         
-        try:
-             #kiểm tra cuối ngày hay chưa
+        # kiểm tra đã số lượng đăng video mỗi ngày
+        time_today, max_video_upload, count_video_uploaded = get_time_info()
+        if count_video_uploaded >= max_video_upload - 1:
+            print("Lỗi xảy ra, đã vượt quá số lượng video đăng hằng ngày")
+            sys.exit()
+        
+        try: 
+            #kiểm tra cuối ngày hay chưa
             print('kiểm tra đã cuối ngày chưa')
             now = datetime.now()
             end_of_day = datetime.combine(now.date(), datetime.max.time())
@@ -268,14 +275,18 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 os.path.abspath(f"{path_folder}/thumbnail.jpg"),
                 is_not_wait_check= is_not_check_yt
             )
+            update_line_times(line_number=3, delta= 1)
+            time_today, max_video_upload, count_video_uploaded = get_time_info()
             if data_by_ip['youtubes'].__len__() > 1:
                 now = datetime.now()
                 new_time = now + timedelta(minutes=times[0]['time3'])
+                print(f'hôm nay đã đăng {count_video_uploaded} video')
                 print(f'Thời gian đăng video tiếp theo: {new_time.strftime("%Y-%m-%d %H:%M:%S")}')
                 time.sleep(60 * times[0]['time3'])
             else:
                 now = datetime.now()
                 new_time = now + timedelta(minutes=times[0]['time2'])
+                print(f'hôm nay đã đăng {count_video_uploaded} video')
                 print(f'Thời gian đăng video tiếp theo: {new_time.strftime("%Y-%m-%d %H:%M:%S")}')
                 time.sleep(60 * times[0]['time2'])
             print('Tiếp tục...')
@@ -324,7 +335,10 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
 if __name__ == "__main__":
     is_exit = False
     while is_exit is False:
+        ensure_time_file()
         check_not_exist_to_create_ip()
+        time_today, max_video_upload, count_video_uploaded = get_time_info()
+        
         print('|-----------------------------------------------|')
         print('|-------       tool youtube linux        -------|')
         print('|-0. Thoát chương trình                  -------|')
@@ -334,8 +348,20 @@ if __name__ == "__main__":
         print('|-4. chỉnh sitemap website (chỉnh toàn bộ vps) -|')
         print('|-5. chỉnh thời gian chạy (chỉnh toàn bộ vps) --|')
         print('|-6. Chạy youtube                        -------|')
+        print(f'|-7. đăng {max_video_upload} video mỗi ngày (7-number)   -------|')
         
-        func = int(input("Nhập chọn chức năng: "))
+        input_data = input("Nhập chọn chức năng: ")
+        func = None
+        
+        if input_data.startswith("7-"):
+            value_str = input_data[2:]  # phần sau '7-'
+            if value_str.isdigit():  # kiểm tra toàn bộ là số
+                text = int(value_str)
+                update_line_times(line_number= 2, new_value= text)
+            else:
+                print("❌ Lỗi cú pháp")
+        else:
+            func = int(input_data)
         
         if func == 1:
             while func == 1:
