@@ -1438,7 +1438,7 @@ def upload_yt(user_data_dir, title, description, tags, video_path, video_thumbna
     while is_not_wait_check is False:
         try:
             element = browser.find_elements(
-                By.XPATH, '//*[@check-status="UPLOAD_CHECKS_DATA_COPYRIGHT_STATUS_COMPLETED" or @check-status="UPLOAD_CHECKS_DATA_COPYRIGHT_STATUS_STARTED" or @checks-summary-status-v2="UPLOAD_CHECKS_DATA_SUMMARY_STATUS_COMPLETED"]')
+                By.XPATH, '//*[@check-status="UPLOAD_CHECKS_DATA_COPYRIGHT_STATUS_COMPLETED" or @check-status="UPLOAD_CHECKS_DATA_COPYRIGHT_STATUS_STARTED"]')
             if element:
                 break  # Thoát vòng lặp nếu tìm thấy
         except:
@@ -1500,6 +1500,14 @@ def upload_yt(user_data_dir, title, description, tags, video_path, video_thumbna
         )
         submit_button.click()
 
+    try:
+        WebDriverWait(browser, 30).until(
+            EC.element_to_be_clickable((By.ID, 'secondary-action-button'))
+        )
+        browser.find_element(By.ID, 'secondary-action-button').click()
+    except:
+        print('Không tồn tại dialog')
+    
     time.sleep(10)
     WebDriverWait(browser, 100).until(
         EC.presence_of_element_located(

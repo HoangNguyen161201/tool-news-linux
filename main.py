@@ -72,6 +72,7 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
     current_link = None
     while True:
         # lấy data
+        ensure_time_file()
         data_by_ip = find_one_ip()
         youtube = get_next_youtube(data_by_ip)
         times = get_times()
