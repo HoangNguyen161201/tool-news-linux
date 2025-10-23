@@ -37,7 +37,8 @@ import inspect
 import xml.etree.ElementTree as ET
 from db_mongodb import get_all_sitemap_links
 from itertools import zip_longest
-
+from gtts import gTTS
+import tempfile
 
 def func_to_string(func):
     return inspect.getsource(func)
@@ -1864,3 +1865,82 @@ def update_line_times(filename="time.txt", line_number=2, new_value=None, delta=
 
     with open(filename, "w", encoding="utf-8") as f:
         f.writelines(lines)
+        
+def generate_to_voice_gtts(
+    text: str,
+    bgm_path: str = None,
+    output_path: str = "final_mix.aac",
+    speed: float = 1.3,
+    lang: str = "vi",
+    volume_voice: float = 3.0,
+    volume_bgm: float = 0.25
+):
+    if shutil.which("ffmpeg") is None:
+        raise EnvironmentError("❌ ffmpeg chưa được cài đặt hoặc không có trong PATH.")
+
+    tmp_mp3 = os.path.join(tempfile.gettempdir(), "tts_temp.mp3")
+    tmp_voice = os.path.join(tempfile.gettempdir(), "tts_voice.aac")
+
+    print("🔊 Đang tạo giọng đọc bằng gTTS...")
+
+    # --- Bước 1: tạo file giọng đọc bằng gTTS
+    tts = gTTS(text=text, lang=lang, slow=False)
+    tts.save(tmp_mp3)
+
+    # --- Bước 2: chỉnh tốc độ và tăng âm lượng giọng
+    ff_speed = min(max(speed, 0.5), 2.0)
+    cmd_voice = [
+        "ffmpeg", "-y", "-i", tmp_mp3,
+        "-filter:a", f"atempo={ff_speed},volume={volume_voice}",
+        "-c:a", "aac", "-b:a", "128k",
+        tmp_voice
+    ]
+    subprocess.run(cmd_voice, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # --- Bước 3: nếu không có nhạc nền → chỉ xuất giọng đọc
+    if not bgm_path:
+        shutil.move(tmp_voice, output_path)
+        print(f"✅ Đã tạo file giọng đọc: {output_path}")
+        return output_path
+
+    # --- Bước 4: lấy độ dài giọng đọc để canh nhạc nền
+    cmd_duration = [
+        "ffprobe", "-v", "error", "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1", tmp_voice
+    ]
+    duration = float(subprocess.check_output(cmd_duration).decode().strip())
+
+    tmp_bgm = os.path.join(tempfile.gettempdir(), "bgm_temp.aac")
+
+    # --- Bước 5: loop hoặc cắt nhạc nền cho vừa thời lượng
+    cmd_loop = [
+        "ffmpeg", "-y", "-stream_loop", "-1", "-i", bgm_path,
+        "-t", str(duration), "-c:a", "aac", "-b:a", "128k", tmp_bgm
+    ]
+    subprocess.run(cmd_loop, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # --- Bước 6: trộn nhạc nền và giọng đọc, giữ nguyên âm lượng voice
+    cmd_mix = [
+        "ffmpeg", "-y",
+        "-i", tmp_voice,
+        "-i", tmp_bgm,
+        "-filter_complex",
+        f"[1:a]volume={volume_bgm}[bgm];[0:a][bgm]amix=inputs=2:duration=first:weights=1 {volume_bgm}:dropout_transition=3[a]",
+        "-map", "[a]",
+        "-c:a", "aac",
+        "-b:a", "192k",
+        output_path
+    ]
+    subprocess.run(cmd_mix, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # --- Bước 7: dọn file tạm
+    for f in [tmp_mp3, tmp_voice, tmp_bgm]:
+        if os.path.exists(f):
+            os.remove(f)
+
+    if os.path.exists(output_path):
+        print(f"✅ Đã tạo file hoàn chỉnh: {output_path}")
+        return output_path
+    else:
+        print("❌ Lỗi: Không tạo được file.")
+        return None

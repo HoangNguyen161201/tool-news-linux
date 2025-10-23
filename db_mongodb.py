@@ -4,15 +4,15 @@ from datetime import datetime
 import socket
 
 import socket
-import winreg
+# import winreg
 
 def getIp():
-    try:
-        key = r"SOFTWARE\Microsoft\Cryptography"
-        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key) as h:
-            guid, _ = winreg.QueryValueEx(h, "MachineGuid")
-            return str(guid)
-    except Exception:
+    # try:
+    #     key = r"SOFTWARE\Microsoft\Cryptography"
+    #     with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key) as h:
+    #         guid, _ = winreg.QueryValueEx(h, "MachineGuid")
+    #         return str(guid)
+    # except Exception:
         try:
             s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
             s.connect(("2001:4860:4860::8888", 80, 0, 0))  # Google DNS IPv6

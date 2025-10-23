@@ -3,7 +3,7 @@ import os
 from untils import get_links_get_content, write_lines_to_file, generate_title_description_improved, generate_video_by_image_ffmpeg, get_all_link_in_theguardian_new
 from untils import concat_content_videos_ffmpeg, concat_content_videos_moviepy, get_img_gif_person, generate_image_ffmpeg, generate_image_moviepy, generate_video_by_image_moviepy, generate_content, generate_content_improved
 from untils import get_link_in_sitemap, upload_yt, generate_to_voice_edge, generate_thumbnail, generate_thumbnail_moviepy_c2, generate_image_and_video_aff_and_get_three_item, generate_image_and_video_aff_and_get_three_item_amazon
-from untils import update_line_times, get_time_info, ensure_time_file, get_media_duration, clear_cache_chrome, check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
+from untils import generate_to_voice_gtts, update_line_times, get_time_info, ensure_time_file, get_media_duration, clear_cache_chrome, check_identity_verification, generate_image_cv2, generate_video_by_image_cv2, open_chrome_to_edit
 from db_mongodb import get_next_youtube, get_all_models, insert_model, delete_model, update_time, insert_time, get_times, get_all_sitemap_links, insert_sitemap_link, delete_sitemap_link, get_func_to_get_info_new, check_link_exists, insert_link, check_authorization, check_not_exist_to_create_ip, find_one_ip, add_gemini_key_to_ip, remove_gemini_key_youtube_to_ip, update_driver_path_to_ip, add_youtube_to_ip, remove_youtube_to_ip
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
@@ -212,10 +212,13 @@ def main(type_run_video = 'ffmpeg', is_not_run_parallel_create_child_video = Fal
                 )
 
                 future2 = executor.submit(
-                    generate_to_voice_edge,
-                    new_info['content'],
-                    f"{path_folder}/content-voice.aac",
-                    'vi-VN-HoaiMyNeural'
+                    generate_to_voice_gtts,
+                    text=new_info['content'],
+                    bgm_path="./public/bg.mp3",
+                    output_path=f"{path_folder}/content-voice.aac",
+                    speed=1.3,
+                    volume_voice=3.0,
+                    volume_bgm=0.25
                 )
 
                 future3 = executor.submit(
